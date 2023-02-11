@@ -1,0 +1,17 @@
+- image_id: 1.png
+  subtitle_list:
+  - content:
+    - a line that uses default profile ID.
+    subtitle_profile_id: default
+- image_id: 2.png
+  subtitle_list:
+  - content:
+    - ''
+- image_id: 3.png
+  subtitle_list:
+  - content:
+    - ''
+- image_id: 4.png
+  subtitle_list:
+  - content:
+    - ''

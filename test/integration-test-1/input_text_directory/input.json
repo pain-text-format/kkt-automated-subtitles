@@ -1,0 +1,21 @@
+[
+  {
+    "image_id": "1.png",
+    "subtitle_list": [
+      {
+        "content": [
+          "This is the first image."
+        ]
+      }
+    ]
+  },
+  {
+    "image_id": "3.png",
+    "subtitle_list": [
+      {
+        "content": [
+          "This is the third image."
+        ]
+      }]
+  }
+]
