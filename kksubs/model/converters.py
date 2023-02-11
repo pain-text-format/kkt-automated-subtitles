@@ -69,7 +69,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
     return subtitle_profile
 
 
-def _inject_subtitle_profile_data(subtitle, subtitle_profiles:Dict[str, SubtitleProfile]=None, default_profile_id:str=None):
+def _inject_subtitle_profile_data(subtitle, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:Optional[str]=None):
     # assume subtitle has local profile information.
 
     # check if default profile ID exists --> get default profile.

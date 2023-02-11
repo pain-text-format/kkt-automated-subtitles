@@ -73,9 +73,15 @@ class SubtitleDataAccessService:
         return image_paths
 
     def get_subtitle_profiles(self) -> Dict[str, SubtitleProfile]:
-        return get_subtitle_profiles(self.subtitle_profile_path)
+        if self.subtitle_profile_path is not None:
+            if not os.path.exists(self.subtitle_profile_path):
+                raise FileExistsError(f"Subtitle profile path {self.subtitle_profile_path} does not exist.")
+            return get_subtitle_profiles(self.subtitle_profile_path)
+        return None
 
     def set_default_subtitle_profile_id(self, profile_id):
+        if self.get_subtitle_profiles() is None:
+            raise KeyError("Currently there are no subtitle profiles associated with this application.")
         if profile_id not in self.get_subtitle_profiles().keys():
             raise KeyError(f"profile ID {profile_id} not in subtitle profiles located in {self.subtitle_profile_path}")
         self.default_subtitle_profile_id = profile_id
