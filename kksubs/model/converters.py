@@ -1,12 +1,13 @@
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import yaml
 
 # convert and delegate
 
 from kksubs.model.domain_models import SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
+from kksubs.model.validate import validate_subtitle_groups
 
 
 def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfile:
@@ -69,8 +70,10 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
     return subtitle_profile
 
 
-def _inject_subtitle_profile_data(subtitle, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:Optional[str]=None):
+def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:Optional[str]=None):
     # assume subtitle has local profile information.
+    if subtitle.subtitle_profile is None:
+        subtitle.subtitle_profile = SubtitleProfile()
 
     # check if default profile ID exists --> get default profile.
     # else, use global subtitle profile.
@@ -172,8 +175,13 @@ def _get_profile_data_type_and_feature(line):
     return None, None, None
 
 
-def _add_text_data_to_subtitle(subtitle: Subtitle, line) -> Subtitle:
+def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
     # extracts profile-related data from a line of text, and adds it to the subtitle appropriately.
+    # first check if it is a profile ID field.
+    if line.startswith("subtitle_profile_id:"):
+        subtitle_profile_id = line.split(":", 1)[1].lstrip()
+        subtitle.subtitle_profile_id = subtitle_profile_id
+        return subtitle
 
     # font (represents FontData)
     # font.style
@@ -300,11 +308,13 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
 def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     extension = os.path.splitext(textpath)[1]
     if extension == ".json":
-        return _get_subtitle_groups_from_json(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
+        result = _get_subtitle_groups_from_json(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
     if extension in {".yml", ".yaml"}:
-        return _get_subtitle_groups_from_yaml(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
+        result = _get_subtitle_groups_from_yaml(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
     if extension == ".txt":
-        return _get_subtitle_groups_from_text(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
+        result = _get_subtitle_groups_from_text(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
+    validate_subtitle_groups(result)
+    return result
 
 
 def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:

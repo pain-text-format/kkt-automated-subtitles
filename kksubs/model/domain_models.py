@@ -75,7 +75,7 @@ class BaseData(ABC):
 class FontData(BaseData):
     def __init__(
             self, style: Optional[str] = None, color: Optional[Union[List, str]] = None, size: Optional[int] = None,
-            stroke_color:Optional = None, stroke_size:Optional[int] = None,
+            stroke_color = None, stroke_size:Optional[int] = None,
     ):
         self.style = style
         self.color = color
