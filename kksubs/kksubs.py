@@ -18,18 +18,23 @@ class SubtitleController:
         self.subtitle_service = subtitle_service
 
     def load_input_text_directory(self, directory):
+        logger.info(f"Loaded input text directory: {directory}.")
         self.subtitle_model.set_input_text_directory(directory)
 
     def load_input_image_directory(self, directory):
+        logger.info(f"Loaded input image directory: {directory}.")
         self.subtitle_model.set_input_image_directory(directory)
 
     def load_output_directory(self, directory):
+        logger.info(f"Loaded output directory: {directory}.")
         self.subtitle_model.set_output_directory(directory)
 
     def load_subtitle_profiles(self, filepath):
+        logger.info(f"Loaded subtitle profile: {filepath}.")
         self.subtitle_model.set_subtitle_profile_path(filepath)
 
     def load_default_subtitle_profile_id(self, default_subtitle_profile_id):
+        logger.info(f"Loaded default subtitle profile ID: {default_subtitle_profile_id}.")
         self.subtitle_model.set_default_subtitle_profile_id(default_subtitle_profile_id)
 
     def load_configs(self, filepath):

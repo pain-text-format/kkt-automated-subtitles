@@ -10,7 +10,7 @@ def _validate_font_data(font_data:FontData):
     if font_data.style is None:
         raise KeyError
     if not os.path.exists(font_data.style):
-        raise FileExistsError
+        raise FileExistsError(f"Style {font_data.style} does not exist.")
 
 def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
     if subtitle_profile.font_data is None:

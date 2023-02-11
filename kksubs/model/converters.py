@@ -7,7 +7,6 @@ import yaml
 # convert and delegate
 
 from kksubs.model.domain_models import SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
-from kksubs.model.validate import validate_subtitle_groups
 
 
 def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfile:
@@ -313,7 +312,7 @@ def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[st
         result = _get_subtitle_groups_from_yaml(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
     if extension == ".txt":
         result = _get_subtitle_groups_from_text(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
-    validate_subtitle_groups(result)
+    # validate_subtitle_groups(result)
     return result
 
 
