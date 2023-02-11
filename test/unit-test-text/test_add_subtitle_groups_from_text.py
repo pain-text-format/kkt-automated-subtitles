@@ -1,7 +1,7 @@
 import unittest
 
-from src.model.converters import _get_subtitle_groups_from_text
-from src.model.domain_models import TextboxData
+from kksubs.model.converters import _get_subtitle_groups_from_text
+from kksubs.model.domain_models import TextboxData
 
 
 class TestAddSubtitleGroups(unittest.TestCase):

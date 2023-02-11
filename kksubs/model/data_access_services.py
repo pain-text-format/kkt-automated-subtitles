@@ -4,8 +4,8 @@ from typing import List, Dict
 
 import yaml
 
-from src.model.converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
-from src.model.domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
+from kksubs.model.converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
+from kksubs.model.domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
     SupportedInputTextExtensions
 
 logger = logging.getLogger(__name__)

@@ -2,8 +2,8 @@ import unittest
 
 from PIL import Image
 
-from src.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile, Subtitle
-from src.model.subtitle_services import apply_subtitle_to_image
+from kksubs.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile, Subtitle
+from kksubs.model.subtitle_services import apply_subtitle_to_image
 
 
 class TestAddSubtitles(unittest.TestCase):

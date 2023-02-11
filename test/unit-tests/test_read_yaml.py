@@ -2,7 +2,7 @@ import unittest
 
 import yaml
 
-from src.model.converters import _get_subtitle_groups_from_dict
+from kksubs.model.converters import _get_subtitle_groups_from_dict
 
 
 class TestReadYaml(unittest.TestCase):

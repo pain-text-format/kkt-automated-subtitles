@@ -1,7 +1,7 @@
 import unittest
 
-from src.model.data_access_services import SubtitleDataAccessService
-from src.model.subtitle_services import SubtitleService
+from kksubs.model.data_access_services import SubtitleDataAccessService
+from kksubs.model.subtitle_services import SubtitleService
 
 
 class TestAddSubtitles(unittest.TestCase):

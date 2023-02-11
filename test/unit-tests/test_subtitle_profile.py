@@ -1,6 +1,6 @@
 import unittest
 
-from src.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile
+from kksubs.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile
 
 
 class TestSubtitleProfile(unittest.TestCase):

@@ -1,8 +1,8 @@
 import json
 import logging
 
-from src.model.data_access_services import SubtitleDataAccessService
-from src.model.subtitle_services import SubtitleService
+from kksubs.model.data_access_services import SubtitleDataAccessService
+from kksubs.model.subtitle_services import SubtitleService
 
 logger = logging.getLogger(__name__)
 

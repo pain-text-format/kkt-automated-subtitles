@@ -1,7 +1,7 @@
 import unittest
 
-from src.model.converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
-from src.model.domain_models import FontData
+from kksubs.model.converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
+from kksubs.model.domain_models import FontData
 
 
 class TestModels(unittest.TestCase):

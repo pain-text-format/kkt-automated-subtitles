@@ -1,6 +1,6 @@
 import unittest
 
-from src.model.data_access_services import SubtitleDataAccessService
+from kksubs.model.data_access_services import SubtitleDataAccessService
 
 
 class TestYAMLWriter(unittest.TestCase):

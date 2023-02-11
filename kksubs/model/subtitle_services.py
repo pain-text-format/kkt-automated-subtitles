@@ -4,8 +4,8 @@ import textwrap
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-from src.model.data_access_services import SubtitleDataAccessService
-from src.model.domain_models import Subtitle, SubtitleGroup
+from kksubs.model.data_access_services import SubtitleDataAccessService
+from kksubs.model.domain_models import Subtitle, SubtitleGroup
 
 logger = logging.getLogger(__name__)
 
