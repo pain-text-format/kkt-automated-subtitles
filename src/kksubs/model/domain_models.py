@@ -5,6 +5,9 @@ from typing import Optional, Union, List
 
 from PIL import ImageColor
 
+def get_default_font_style():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "../resource/font/Roboto/Roboto-Regular.ttf")
+
 def asc_override(local_attr, profile_attr, global_attr):
     if local_attr is not None:
         return local_attr
@@ -109,7 +112,7 @@ class FontData(BaseData):
         if profile_font_data is None:
             profile_font_data = FontData()
 
-        self.style = asc_override(self.style, profile_font_data.style, "resource/fonts/Roboto/Roboto-Regular.ttf")
+        self.style = asc_override(self.style, profile_font_data.style, get_default_font_style())
         self.color = asc_override(self.color, profile_font_data.color, (255, 255, 255))
         self.size = asc_override(self.size, profile_font_data.size, 12)
 

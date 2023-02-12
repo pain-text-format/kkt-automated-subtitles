@@ -8,6 +8,8 @@ from kksubs.model.converters import get_subtitle_groups_by_textpath, get_subtitl
 from kksubs.model.domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
     SupportedInputTextExtensions
 
+from kksubs.model.domain_models import get_default_font_style
+
 logger = logging.getLogger(__name__)
 
 class SubtitleDataAccessService:
@@ -60,7 +62,7 @@ class SubtitleDataAccessService:
 
     def get_subtitle_groups(self) -> Dict[str, Dict[str, SubtitleGroup]]:
         if self.default_subtitle_style is None:
-            logger.warning("A default subtitle style/font has not been specified.")
+            logger.warning(f"A default subtitle style/font has not been specified, using the sample font {get_default_font_style()} instead.")
         result = {
             textpath: self.get_subtitle_groups_by_textpath(textpath) for textpath in self.get_textpaths()
         }
