@@ -2,7 +2,7 @@ import unittest
 
 from PIL import Image
 
-from src.kksubs.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile, Subtitle
+from src.kksubs.model.domain_models import FontData, OutlineData, TextboxData, SubtitleProfile, Subtitle, get_default_font_style
 from src.kksubs.model.subtitle_services import apply_subtitle_to_image
 
 
@@ -13,7 +13,7 @@ class TestAddSubtitles(unittest.TestCase):
         subtitle_1 = Subtitle(
             subtitle_profile=SubtitleProfile(
                 font_data=FontData(
-                    style="resource/fonts/Roboto/Roboto-Regular.ttf",
+                    style=get_default_font_style(),
                     color=(255, 255, 255),
                     size=50
                 ),
@@ -43,7 +43,7 @@ class TestAddSubtitles(unittest.TestCase):
         subtitle_2 = Subtitle(
             subtitle_profile=SubtitleProfile(
                 font_data=FontData(
-                    style="resource/fonts/Roboto/Roboto-Regular.ttf",
+                    style=get_default_font_style(),
                     color=(255, 255, 255),
                     size=50
                 ),
