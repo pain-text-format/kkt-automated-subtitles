@@ -6,7 +6,7 @@ import yaml
 
 # convert and delegate
 
-from src.kksubs.model.domain_models import SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
+from .domain_models import SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
 def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfile:

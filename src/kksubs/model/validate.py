@@ -2,7 +2,7 @@
 
 import os
 from typing import List
-from src.kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile
+from .domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile
 
 def _validate_font_data(font_data:FontData):
     if font_data is None:

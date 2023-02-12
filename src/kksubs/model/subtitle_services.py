@@ -4,9 +4,9 @@ import textwrap
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-from src.kksubs.model.data_access_services import SubtitleDataAccessService
-from src.kksubs.model.domain_models import Subtitle, SubtitleGroup
-from src.kksubs.model.validate import validate_subtitle_group
+from .data_access_services import SubtitleDataAccessService
+from .domain_models import Subtitle, SubtitleGroup
+from .validate import validate_subtitle_group
 
 logger = logging.getLogger(__name__)
 
