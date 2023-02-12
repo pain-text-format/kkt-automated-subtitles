@@ -9,7 +9,7 @@ from src.kksubs.model.subtitle_services import apply_subtitle_to_image
 class TestAddSubtitles(unittest.TestCase):
 
     def test_add_subtitle_to_image(self):
-        image = Image.open("resource/sample-images/1.png")
+        image = Image.open("test/sample-images/1.png")
         subtitle_1 = Subtitle(
             subtitle_profile=SubtitleProfile(
                 font_data=FontData(
