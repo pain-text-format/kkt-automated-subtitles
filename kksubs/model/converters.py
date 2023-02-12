@@ -102,6 +102,10 @@ def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, Subt
     :param default_profile_id:
     :return: Subtitle
     """
+    is_red_aura = False
+    if subtitle_json.get("subtitle_profile_id") == "red aura":
+        is_red_aura = True
+
     subtitle_profile_id_key = "subtitle_profile_id"
     subtitle_profile_key = "subtitle_profile"
     content_key = "content"
@@ -110,9 +114,11 @@ def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, Subt
     if subtitle_profile_id_key in subtitle_json.keys():
         subtitle.subtitle_profile_id = subtitle_json[subtitle_profile_id_key]
     subtitle.subtitle_profile = SubtitleProfile()
+
+
     if subtitle_profile_key in subtitle_json.keys():
         local_profile = _get_subtitle_profile_from_dict(subtitle_json[subtitle_profile_key])
-        subtitle.subtitle_profile.add_default(local_profile)
+        subtitle.subtitle_profile = local_profile
 
     _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
     if content_key in subtitle_json.keys():
@@ -136,11 +142,16 @@ def _get_subtitle_groups_from_dict(subtitle_groups_list:Dict, subtitle_profiles:
         subtitle_group = SubtitleGroup(image_id=image_id)
         if subtitle_list_key not in subtitle_group_json.keys():
             continue
-        subtitle_group.subtitle_list = [
-            _get_subtitle_from_dict(subtitle_json, subtitle_profiles=subtitle_profiles,
-                                    default_profile_id=default_profile_id) for subtitle_json in
-            subtitle_group_json[subtitle_list_key]
-        ]
+        subtitle_group.subtitle_list = []
+        for subtitle_json in subtitle_group_json[subtitle_list_key]:
+            subtitle_group.subtitle_list.append(_get_subtitle_from_dict(
+                subtitle_json, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id
+            ))
+        # subtitle_group.subtitle_list = [
+        #     _get_subtitle_from_dict(subtitle_json, subtitle_profiles=subtitle_profiles,
+        #                             default_profile_id=default_profile_id) for subtitle_json in
+        #     subtitle_group_json[subtitle_list_key]
+        # ]
         subtitle_groups_by_path[image_id] = subtitle_group
 
     return subtitle_groups_by_path
@@ -164,7 +175,10 @@ text_profile_features_by_keys = {
 }
 
 
-def _get_profile_data_type_and_feature(line):
+def _get_profile_data_type_feature_and_value(line:str):
+    if line.startswith("subtitle_profile_id:"):
+        return "subtitle_profile_id", "subtitle_profile_id", line.split(":", 1)[1].lstrip()
+
     for data_type in text_profile_features_by_keys.keys():
         for feature in text_profile_features_by_keys[data_type]:
             formatted_feature = f"{data_type}.{feature}:"
@@ -177,10 +191,6 @@ def _get_profile_data_type_and_feature(line):
 def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
     # extracts profile-related data from a line of text, and adds it to the subtitle appropriately.
     # first check if it is a profile ID field.
-    if line.startswith("subtitle_profile_id:"):
-        subtitle_profile_id = line.split(":", 1)[1].lstrip()
-        subtitle.subtitle_profile_id = subtitle_profile_id
-        return subtitle
 
     # font (represents FontData)
     # font.style
@@ -199,31 +209,39 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
     # box.anchor_point
     # box.box_width
     # box.push
-    data_type, attribute, value = _get_profile_data_type_and_feature(line)
+    data_type, attribute, value = _get_profile_data_type_feature_and_value(line)
     if attribute is None:
         return subtitle
 
     if subtitle.subtitle_profile is None:
         subtitle.subtitle_profile = SubtitleProfile()
+    if data_type == "subtitle_profile_id":
+        subtitle.subtitle_profile_id = value
+        return subtitle
+
     if data_type == "font":
         if subtitle.subtitle_profile.font_data is None:
             subtitle.subtitle_profile.font_data = FontData()
         setattr(subtitle.subtitle_profile.font_data, attribute, value)
+        subtitle.subtitle_profile.font_data.correct_values()
         return subtitle
     if data_type == "outline1":
         if subtitle.subtitle_profile.outline_data_1 is None:
             subtitle.subtitle_profile.outline_data_1 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_1, attribute, value)
+        subtitle.subtitle_profile.outline_data_1.correct_values()
         return subtitle
     if data_type == "outline2":
         if subtitle.subtitle_profile.outline_data_2 is None:
             subtitle.subtitle_profile.outline_data_2 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_2, attribute, value)
+        subtitle.subtitle_profile.outline_data_2.correct_values()
         return subtitle
     if data_type == "box":
         if subtitle.subtitle_profile.textbox_data is None:
             subtitle.subtitle_profile.textbox_data = TextboxData()
         setattr(subtitle.subtitle_profile.textbox_data, attribute, value)
+        subtitle.subtitle_profile.textbox_data.correct_values()
         return subtitle
     raise
 
@@ -251,7 +269,6 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
 
     for i, line in enumerate(lines):
         if line.startswith("image_id:"):
-            # print(line)
             subtitle_group.image_id = line.split(":")[1].lstrip()
             is_content_environment = False
             is_profile_environment = True
@@ -282,22 +299,37 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
         # last part.
         if i+1==len(lines) and subtitle_group.image_id is not None:
             _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
+            if subtitle.subtitle_profile.font_data is None:
+                raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
             subtitle_group.subtitle_list.append(subtitle)
             subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
 
-        # subtitle
-        elif is_content_environment and lines[i+1].startswith("content:"):
-            _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
-            subtitle_group.subtitle_list.append(subtitle)
-            subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+        if i+1<len(lines):
+            # subtitle: the current subtitle environment ends when the next line is content or a file for subtitle profile.
+            if is_content_environment and i+1<len(lines) and lines[i+1].startswith("content:"):
+                _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
+                if subtitle.subtitle_profile.font_data is None:
+                    raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
+                subtitle_group.subtitle_list.append(subtitle)
+                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
-        # subtitle group
-        elif lines[i+1].startswith("image_id:") and subtitle_group.image_id is not None:
-            _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
-            subtitle_group.subtitle_list.append(subtitle)
-            subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
-            subtitle_group = SubtitleGroup(subtitle_list=[])
-            subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+            data_type, feature, value = _get_profile_data_type_feature_and_value(lines[i+1])
+            if is_content_environment and i+1<len(lines) and data_type is not None:
+                is_content_environment = False
+                is_profile_environment = True
+                _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
+                if subtitle.subtitle_profile.font_data is None:
+                    raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
+                subtitle_group.subtitle_list.append(subtitle)
+                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+
+            # subtitle group
+            elif i+1<len(lines) and lines[i+1].startswith("image_id:") and subtitle_group.image_id is not None:
+                _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
+                subtitle_group.subtitle_list.append(subtitle)
+                subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
+                subtitle_group = SubtitleGroup(subtitle_list=[])
+                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
         pass
 

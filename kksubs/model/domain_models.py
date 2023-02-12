@@ -145,6 +145,8 @@ class OutlineData(BaseData):
             self.color = (self.color[0], self.color[1], self.color[2])
         elif isinstance(self.color, str):
             self.color = ImageColor.getrgb(self.color)
+        if isinstance(self.radius, str):
+            self.radius = int(self.radius)
         pass
 
     @classmethod
@@ -160,6 +162,7 @@ class OutlineData(BaseData):
         self.color = asc_override(self.color, profile_outline_data.color, (0, 0, 0))
         self.radius = asc_override(self.radius, profile_outline_data.radius, 5)
         self.blur_strength = asc_override(self.blur_strength, profile_outline_data.blur_strength, 0)
+        self.correct_values()
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -183,8 +186,15 @@ class TextboxData(BaseData):
         super().__init__()
 
     def correct_values(self):
-        if isinstance(self.anchor_point, list):
-            self.anchor_point = (self.anchor_point[0], self.anchor_point[1])
+        if self.anchor_point is not None:
+            if isinstance(self.anchor_point, str):
+                self.anchor_point = tuple(map(int, self.anchor_point[1:-1].split(",")))
+            elif isinstance(self.anchor_point, list):
+                self.anchor_point = (int(self.anchor_point[0]), int(self.anchor_point[1]))
+            elif isinstance(self.anchor_point, tuple):
+                pass
+            else:
+                raise TypeError(f"Anchor point has invalid type: {self.anchor_point} is of type {type(self.anchor_point)}.")
 
     @classmethod
     def get_default(cls):
@@ -249,7 +259,6 @@ class SubtitleProfile(BaseData):
         elif profile.outline_data_1 is None:
             assert self.outline_data_1 is not None
             self.outline_data_1.add_default(OutlineData.get_default())
-
 
 
         if self.font_data is None:

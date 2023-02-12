@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 from kksubs.model.data_access_services import SubtitleDataAccessService
 from kksubs.model.domain_models import Subtitle, SubtitleGroup
+from kksubs.model.validate import validate_subtitle_group
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,13 @@ class SubtitleService:
 
     def add_subtitles(self):
         subtitle_groups = self.subtitle_model.get_subtitle_groups()
+        # validation layer here.
+        for text_id in subtitle_groups.keys():
+            for image_id in subtitle_groups.get(text_id).keys():
+                validate_subtitle_group(subtitle_groups.get(text_id).get(image_id))
+
         image_paths = self.subtitle_model.get_image_paths()
+        n = len(image_paths)
 
         for text_id in subtitle_groups.keys():
             subtitle_group_by_text_id = subtitle_groups[text_id]
@@ -154,7 +161,7 @@ class SubtitleService:
             if not os.path.exists(output_directory_by_text_id):
                 os.makedirs(output_directory_by_text_id)
 
-            for image_path in image_paths:
+            for i, image_path in enumerate(image_paths):
                 image_id = os.path.basename(image_path)
                 output_image_path = os.path.join(output_directory_by_text_id, image_id)
                 if image_id in subtitle_group_by_text_id.keys():
@@ -163,6 +170,7 @@ class SubtitleService:
                     processed_image.save(output_image_path)
                 else:
                     Image.open(image_path).save(output_image_path)
+                logger.info(f"Processed and saved image {i+1}/{n} for text_id {os.path.splitext(os.path.basename(text_id))[0]}.")
 
         pass
 

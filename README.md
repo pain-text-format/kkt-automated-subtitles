@@ -6,9 +6,10 @@ It is meant to allow the user to experiment with dialogue options quickly, while
 The user is recommended to apply other creative tools with this as a final pre-processing step for better results. For a demonstration of features, see the `examples` folder.
 
 ## Installation
-Create a virtual environment and install the requirements listed in `requirements.txt`. `pip` or `pip3` is recommended:
+Create a virtual/Conda environment and install the requirements listed in `requirements.txt`. `pip` or `pip3` is recommended:
 ```
 pip install -r requirements.txt
+pip install .
 ```
 
 ## Usage
@@ -37,7 +38,7 @@ This is some text in the third image.
 ```
 Run the following script:
 ```
-from controller import SubtitleController
+from kksubs.kksubs import SubtitleController
 
 controller = SubtitleController()
 controller.load_input_text_directory(input_text_directory)
@@ -104,7 +105,7 @@ This is some text in the third image.
 
 Run the following script, loading the subtitle profiles file into the controller:
 ```
-from controller import SubtitleController
+from kksubs.kksubs import SubtitleController
 
 controller = SubtitleController()
 controller.load_input_text_directory(input_text_directory)
@@ -143,7 +144,7 @@ Instead of loading everything manually into the controller, you can use a `json`
 ```
 Then you can just run this code.
 ```
-from controller import SubtitleController
+from kksubs.kksubs import SubtitleController
 
 controller = SubtitleController()
 controller.load_configs(path_to_config)
