@@ -1,7 +1,7 @@
 
 
 import os
-from typing import Dict, List
+from typing import List
 from kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile
 
 def _validate_font_data(font_data:FontData):

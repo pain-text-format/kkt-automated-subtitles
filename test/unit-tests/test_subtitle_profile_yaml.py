@@ -1,6 +1,6 @@
 import unittest
 
-from kksubs.model.converters import get_subtitle_profiles
+from src.kksubs.model.converters import get_subtitle_profiles
 
 class TestSubtitleProfileYaml(unittest.TestCase):
 
