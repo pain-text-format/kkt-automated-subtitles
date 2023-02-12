@@ -147,6 +147,8 @@ class OutlineData(BaseData):
             self.color = ImageColor.getrgb(self.color)
         if isinstance(self.radius, str):
             self.radius = int(self.radius)
+        if isinstance(self.blur_strength, str):
+            self.blur_strength = int(self.blur_strength)
         pass
 
     @classmethod

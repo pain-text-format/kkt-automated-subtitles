@@ -14,13 +14,14 @@ class SubtitleDataAccessService:
 
     def __init__(
             self, input_text_directory=None, input_image_directory=None, output_directory=None,
-            subtitle_profile_path=None, default_subtitle_profile_id=None
+            subtitle_profile_path=None, default_subtitle_profile_id=None, default_subtitle_style=None
     ):
         self.input_text_directory = input_text_directory
         self.input_image_directory = input_image_directory
         self.output_directory = output_directory
         self.subtitle_profile_path = subtitle_profile_path
         self.default_subtitle_profile_id = default_subtitle_profile_id
+        self.default_subtitle_style = default_subtitle_style
 
     def set_input_image_directory(self, input_image_directory):
         if not os.path.exists(input_image_directory):
@@ -58,6 +59,8 @@ class SubtitleDataAccessService:
         return get_subtitle_groups_by_textpath(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
 
     def get_subtitle_groups(self) -> Dict[str, Dict[str, SubtitleGroup]]:
+        if self.default_subtitle_style is None:
+            logger.warning("A default subtitle style/font has not been specified.")
         result = {
             textpath: self.get_subtitle_groups_by_textpath(textpath) for textpath in self.get_textpaths()
         }
@@ -85,6 +88,11 @@ class SubtitleDataAccessService:
         if profile_id not in self.get_subtitle_profiles().keys():
             raise KeyError(f"profile ID {profile_id} not in subtitle profiles located in {self.subtitle_profile_path}")
         self.default_subtitle_profile_id = profile_id
+
+    def set_default_subtitle_style(self, subtitle_style):
+        if not os.path.exists(subtitle_style):
+            raise FileExistsError(f"The subtitle style {subtitle_style} does not exist.")
+        self.default_subtitle_style = subtitle_style
 
     def generate_yaml_subtitle_template(self, output_path, current_yaml_input_path:str=None):
         # generates a YAML subtitle template to the output path.

@@ -61,12 +61,6 @@ class SubtitleController:
         self.subtitle_model.generate_yaml_subtitle_template(filename, current_yaml_input_path=existing_filename)
         pass
 
-    def set_default_subtitle_profile(self, subtitle_profile_id):
-        self.set_default_subtitle_profile(subtitle_profile_id)
-
-    def set_default_speaker_profile(self, speaker_profile_id):
-        self.set_default_speaker_profile(speaker_profile_id)
-
     def add_subtitles(self):
         self.subtitle_service.add_subtitles()
 

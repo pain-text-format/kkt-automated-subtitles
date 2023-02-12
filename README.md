@@ -1,12 +1,15 @@
 # Koikatsu Automated Subtitles
+
+> WARNING: UNSTABLE REPOSITORY!!!
+
 This small Python program is developed to provide some automation for the subtitling of Koikatsu stories: a sequence of KK renders that tell a story. 
 
-It is meant to allow the user to experiment with dialogue options quickly, while providing *very* basic subtitling capabilities. It does **not** cover other use cases, such as adding text freely on the screen, adding creative effects, and so on.
+It is meant to allow the user to experiment with dialogue options quickly, while providing *very* basic subtitling capabilities. It does **not** cover other use cases, such as adding text freely on the screen, adding creative effects, real-time image interactions, and so on.
 
-The user is recommended to apply other creative tools with this as a final pre-processing step for better results. For a demonstration of features, see the `examples` folder.
+The user is recommended to apply other creative tools with this as a final pre-processing step for better results. For a demonstration of features, see the `examples` folder. (TODO)
 
 ## Installation
-Create a virtual/Conda environment and install the requirements listed in `requirements.txt`. `pip` or `pip3` is recommended:
+Recommended Python version is 3.7-3.10. Create a virtual/Conda environment and install the requirements listed in `requirements.txt`. `pip` or `pip3` is recommended:
 ```
 pip install -r requirements.txt
 pip install .
@@ -27,14 +30,14 @@ The text you want to add to the images can be prepared in some `input_text_direc
 ```
 # input_text_directory/input-text.txt
 image_id: 1.png
-This is some text in the first image.
+content: This is some text in the first image.
 
 image_id: 2.png
-This is some text in the second image.
+content: This is some text in the second image.
 This is the second line in the second image.
 
 image_id: 3.png
-This is some text in the third image.
+content: This is some text in the third image.
 ```
 Run the following script:
 ```
@@ -79,28 +82,39 @@ When run, the program will add subtitles for each text file. This is useful for 
 ```
 
 ### Subtitle Profiles
-To customize a subtitle, we can use "subtitle profiles". Create a file called `subtitle_profiles.json` and add the following:
+To customize a subtitle, we can use "subtitle profiles". Create a file called `subtitle_profiles.yaml` and add the following: (TODO)
 ```
-[
-    # red font color profile
-    # outlined text profile
-    # text with aura profile
-]
+- subtitle_profile_id: red_font_color
+  font_data:
+    color: red
+- subtitle_profile_id: outlined_text
+  font_data:
+    stroke_color: black
+    stroke_size: 2
+- subtitle_profile_id: text_with_aura
+  font_data:
+    color: white
+    stroke_color: black
+    stroke_size: 1
+  outline_data_1:
+    color: white
+    radius: 5
+    blur_strength: 2
 ```
 Then edit the `input-text.txt` like so:
 ```
 # input_text_directory/input-text.txt
 image_id: 1.png
 subtitle_profile_id: red_font_color
-This is some text in the first image.
+content: This is some text in the first image.
 
 image_id: 2.png
 subtitle_profile_id: outlined_text
-This is some text in the second image.
+content: This is some text in the second image.
 
 image_id: 3.png
 subtitle_profile_id: text_with_aura
-This is some text in the third image.
+content: This is some text in the third image.
 ```
 
 Run the following script, loading the subtitle profiles file into the controller:
@@ -121,17 +135,21 @@ You can use subtitle profiles to add multiple subtitles on an image, and overrid
 ```
 image_id: 1.png
 subtitle_profile_id: speaker
-This is the name of the speaker.
+content: This is the name of the speaker.
+
 subtitle_profile_id: content
 fontdata.color: [255, 100, 100]
 fontdata.size: 12
-This is the content spoken by the speaker.
+content: This is the content spoken by the speaker.
 
 image_id: 2.png
 ...
 ```
 
 ### Using Configurations
+> TODO: add YAML support.
+> TODO: check this works.
+
 Instead of loading everything manually into the controller, you can use a `json` file to do it.
 ```
 # config.json
