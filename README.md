@@ -150,15 +150,13 @@ image_id: 2.png
 > TODO: add YAML support.
 > TODO: check this works.
 
-Instead of loading everything manually into the controller, you can use a `json` file to do it.
+Instead of loading everything manually into the controller, you can use a `yaml` file to do it.
 ```
-# config.json
-{
-    "input_text": input_text_directory,
-    "input_image": input_image_directory,
-    "output": output_directory,
-    "subtitle_profiles": path_to_subtitle_profiles
-}
+# config.yaml
+input_text_directory: input_text_directory
+input_image_directory: input_image_directory
+output_directory: output_directory
+subtitle_profile_path: path_to_subtitle_profiles
 ```
 Then you can just run this code.
 ```
