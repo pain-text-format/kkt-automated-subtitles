@@ -350,7 +350,12 @@ def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[st
 
 def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
     # deserialize a list of subtitle profile paths.
-    with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
-        subtitle_profile_list_json = json.load(reader)
-    json_profile_list = [_get_subtitle_profile_from_dict(subtitle_profile_json) for subtitle_profile_json in subtitle_profile_list_json]
-    return {subtitle_profile.subtitle_profile_id:subtitle_profile for subtitle_profile in json_profile_list}
+    extension = os.path.splitext(subtitle_profile_path)[1]
+    if extension == ".json":
+        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
+            subtitle_profile_list_dict = json.load(reader)
+    if extension in {".yml", ".yaml"}:
+        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
+            subtitle_profile_list_dict = yaml.safe_load(reader)
+    profile_dict_list = [_get_subtitle_profile_from_dict(subtitle_profile_json) for subtitle_profile_json in subtitle_profile_list_dict]
+    return {subtitle_profile.subtitle_profile_id:subtitle_profile for subtitle_profile in profile_dict_list}
