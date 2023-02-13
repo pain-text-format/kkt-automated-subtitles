@@ -114,21 +114,25 @@ class FontData(BaseData):
 
         self.style = asc_override(self.style, profile_font_data.style, get_default_font_style())
         self.color = asc_override(self.color, profile_font_data.color, (255, 255, 255))
-        self.size = asc_override(self.size, profile_font_data.size, 12)
+        self.size = asc_override(self.size, profile_font_data.size, 50)
 
         default_global_stroke_color = (0, 0, 0)
         default_global_stroke_size = 5
 
-        if self.stroke_color is None and self.stroke_size is None:
-            if profile_font_data.stroke_color is None and profile_font_data.stroke_size is None:
-                pass
-            else:
-                self.stroke_color = asc_override(None, profile_font_data.stroke_color, default_global_stroke_color)
-                self.stroke_size = asc_override(None, profile_font_data.stroke_size, default_global_stroke_size)
-        elif self.stroke_color is None:
-            self.stroke_color = asc_override(None, profile_font_data.stroke_color, default_global_stroke_color)
-        elif self.stroke_size is None:
-            self.stroke_size = asc_override(None, profile_font_data.stroke_size, default_global_stroke_size)
+        self.stroke_color = asc_override(self.stroke_color, profile_font_data.stroke_color, default_global_stroke_color)
+        self.stroke_size = asc_override(self.stroke_size, profile_font_data.stroke_size, default_global_stroke_size)
+
+        # # If stroke color and stroke size is none, assume that user does not want outline. (not used.)
+        # if self.stroke_color is None and self.stroke_size is None:
+        #     if profile_font_data.stroke_color is None and profile_font_data.stroke_size is None:
+        #         pass
+        #     else:
+        #         self.stroke_color = asc_override(None, profile_font_data.stroke_color, default_global_stroke_color)
+        #         self.stroke_size = asc_override(None, profile_font_data.stroke_size, default_global_stroke_size)
+        # elif self.stroke_color is None:
+        #     self.stroke_color = asc_override(None, profile_font_data.stroke_color, default_global_stroke_color)
+        # elif self.stroke_size is None:
+        #     self.stroke_size = asc_override(None, profile_font_data.stroke_size, default_global_stroke_size)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

@@ -10,7 +10,9 @@ from .validate import validate_subtitle_group
 
 logger = logging.getLogger(__name__)
 
-def _get_text_dimensions(text_string, font):
+def _get_text_dimensions(text_string, font, default_text_width=None, default_text_height=None):
+    if text_string == "":
+        return default_text_width, default_text_height
     ascent, descent = font.getmetrics()
 
     text_width = font.getmask(text_string).getbbox()[2]
@@ -61,17 +63,24 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
     box_width = textbox_data.box_width
     push = textbox_data.push
 
-    # analyze text
-    wrapped_text = [_line for line in content for _line in textwrap.wrap(line, width=box_width)]
     font = ImageFont.truetype(font_style, font_size)
-    text_dimensions = [_get_text_dimensions(line, font) for line in wrapped_text]
-    text_widths = list(map(lambda dim:dim[0], text_dimensions))
-    max_text_width = max(text_widths)
     # this is used to standardize the heights of each horizontal text line, but might be a bad idea for different languages.
     # maybe use vertical spacing in the future to avoid font-dependent height definition...
-    text_height = _get_text_dimensions("l", font)[1]
+    default_text_width, default_text_height = _get_text_dimensions("l", font)
+
+    # analyze text
+    wrapped_text = []
+    for line in content:
+        if line != "":
+            wrapped_text.extend(textwrap.wrap(line, width=box_width))
+        else:
+            wrapped_text.append("")
+
+    text_dimensions = [_get_text_dimensions(line, font, default_text_width=default_text_width, default_text_height=default_text_height) for line in wrapped_text]
+    text_widths = list(map(lambda dim:dim[0], text_dimensions))
+    max_text_width = max(text_widths)
     num_lines = len(wrapped_text)
-    sum_text_height = num_lines * text_height
+    sum_text_height = num_lines * default_text_height
 
     # add text.
     for i, line in enumerate(wrapped_text):
@@ -86,9 +95,9 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
         else:
             raise ValueError(f"Invalid alignment value {alignment}.")
         if push == "up":
-            y = image_height/2 - tb_anchor_y + (- text_height*(num_lines-i))
+            y = image_height/2 - tb_anchor_y + (- default_text_height*(num_lines-i))
         elif push == "down":
-            y = image_height/2 - tb_anchor_y + (sum_text_height - text_height*(num_lines-i))
+            y = image_height/2 - tb_anchor_y + (sum_text_height - default_text_height*(num_lines-i))
         else:
             raise ValueError(f"Invalid push value {push}.")
         line_pos = (x, y)
@@ -139,6 +148,8 @@ class SubtitleService:
         image_path = os.path.join(self.subtitle_model.input_image_directory, image_id)
         image = Image.open(image_path).copy()
         for subtitle in subtitle_list:
+            if subtitle.content is None or list(subtitle.content) == 0:
+                continue
             image = apply_subtitle_to_image(image, subtitle)
         return image
 
@@ -150,6 +161,7 @@ class SubtitleService:
                 validate_subtitle_group(subtitle_groups.get(text_id).get(image_id))
 
         image_paths = self.subtitle_model.get_image_paths()
+        image_paths.sort()
         n = len(image_paths)
 
         for text_id in subtitle_groups.keys():

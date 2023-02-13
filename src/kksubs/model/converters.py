@@ -102,9 +102,6 @@ def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, Subt
     :param default_profile_id:
     :return: Subtitle
     """
-    is_red_aura = False
-    if subtitle_json.get("subtitle_profile_id") == "red aura":
-        is_red_aura = True
 
     subtitle_profile_id_key = "subtitle_profile_id"
     subtitle_profile_key = "subtitle_profile"
@@ -272,7 +269,7 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
             subtitle_group.image_id = line.split(":")[1].lstrip()
             is_content_environment = False
             is_profile_environment = True
-        if line.startswith("content:"):
+        elif line.startswith("content:"):
             is_content_environment = True
             is_profile_environment = False
             line = line.split(":", 1)[1].lstrip()
