@@ -1,0 +1,11 @@
+- image_id: 1.png
+  subtitle_list:
+    - content:
+      - test
+      - ""
+      - line break
+      - line after
+- image_id: 2.png
+  subtitle_list:
+    - content:
+      - second test.

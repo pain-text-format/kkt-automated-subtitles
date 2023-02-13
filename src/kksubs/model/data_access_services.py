@@ -4,12 +4,12 @@ from typing import List, Dict
 
 import yaml
 
-from .domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
+from kksubs.model.domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
     SupportedInputTextExtensions
 
-from .domain_models import get_default_font_style
+from kksubs.model.domain_models import get_default_font_style
 
-from .converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
+from kksubs.model.converters import get_subtitle_groups_by_textpath, get_subtitle_profiles
 
 logger = logging.getLogger(__name__)
 

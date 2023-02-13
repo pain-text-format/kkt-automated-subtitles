@@ -1,5 +1,0 @@
-- image_id: 1.png
-  subtitle_list:
-    - subtitle_profile_id: default
-      content:
-        - 'a line that uses default profile ID.'

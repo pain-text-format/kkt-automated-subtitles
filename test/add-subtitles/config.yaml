@@ -1,0 +1,4 @@
+input_image_directory: test/add-subtitles/input-image-directory
+input_text_directory: test/add-subtitles/input-text-directory
+output_directory: test/add-subtitles/output-directory
+subtitle_profile_path: test/add-subtitles/subtitle_profiles.yaml
