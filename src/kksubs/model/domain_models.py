@@ -8,12 +8,11 @@ from PIL import ImageColor
 def get_default_font_style():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "../resource/font/Roboto/Roboto-Regular.ttf")
 
-def asc_override(local_attr, profile_attr, global_attr):
-    if local_attr is not None:
-        return local_attr
-    if profile_attr is not None:
-        return profile_attr
-    return global_attr
+def coalesce(*args):
+    for arg in args:
+        if arg is not None:
+            return arg
+    return None
 
 class SupportedExtensions(Enum):
     @classmethod
@@ -112,15 +111,15 @@ class FontData(BaseData):
         if profile_font_data is None:
             profile_font_data = FontData()
 
-        self.style = asc_override(self.style, profile_font_data.style, get_default_font_style())
-        self.color = asc_override(self.color, profile_font_data.color, (255, 255, 255))
-        self.size = asc_override(self.size, profile_font_data.size, 50)
+        self.style = coalesce(self.style, profile_font_data.style, get_default_font_style())
+        self.color = coalesce(self.color, profile_font_data.color, (255, 255, 255))
+        self.size = coalesce(self.size, profile_font_data.size, 50)
 
         default_global_stroke_color = (0, 0, 0)
         default_global_stroke_size = 5
 
-        self.stroke_color = asc_override(self.stroke_color, profile_font_data.stroke_color, default_global_stroke_color)
-        self.stroke_size = asc_override(self.stroke_size, profile_font_data.stroke_size, default_global_stroke_size)
+        self.stroke_color = coalesce(self.stroke_color, profile_font_data.stroke_color, default_global_stroke_color)
+        self.stroke_size = coalesce(self.stroke_size, profile_font_data.stroke_size, default_global_stroke_size)
 
         # # If stroke color and stroke size is none, assume that user does not want outline. (not used.)
         # if self.stroke_color is None and self.stroke_size is None:
@@ -168,9 +167,9 @@ class OutlineData(BaseData):
         if profile_outline_data is None:
             profile_outline_data = OutlineData()
 
-        self.color = asc_override(self.color, profile_outline_data.color, (0, 0, 0))
-        self.radius = asc_override(self.radius, profile_outline_data.radius, 5)
-        self.blur_strength = asc_override(self.blur_strength, profile_outline_data.blur_strength, 0)
+        self.color = coalesce(self.color, profile_outline_data.color, (0, 0, 0))
+        self.radius = coalesce(self.radius, profile_outline_data.radius, 5)
+        self.blur_strength = coalesce(self.blur_strength, profile_outline_data.blur_strength, 0)
         self.correct_values()
 
     def __eq__(self, other):
@@ -215,10 +214,10 @@ class TextboxData(BaseData):
         if profile_textbox_data is None:
             profile_textbox_data = TextboxData()
 
-        self.alignment = asc_override(self.alignment, profile_textbox_data.alignment, "center")
-        self.anchor_point = asc_override(self.anchor_point, profile_textbox_data.anchor_point, (0, 0))
-        self.box_width = asc_override(self.box_width, profile_textbox_data.box_width, 100)
-        self.push = asc_override(self.push, profile_textbox_data.push, "down")
+        self.alignment = coalesce(self.alignment, profile_textbox_data.alignment, "center")
+        self.anchor_point = coalesce(self.anchor_point, profile_textbox_data.anchor_point, (0, 0))
+        self.box_width = coalesce(self.box_width, profile_textbox_data.box_width, 100)
+        self.push = coalesce(self.push, profile_textbox_data.push, "down")
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -271,7 +270,7 @@ class SubtitleProfile(BaseData):
 
 
         if self.font_data is None:
-            self.font_data = asc_override(self.font_data, profile.font_data, FontData.get_default())
+            self.font_data = coalesce(self.font_data, profile.font_data, FontData.get_default())
         self.font_data.add_default(profile.font_data)
         if self.outline_data_1 is not None:
             if profile.outline_data_1 is None:
@@ -287,7 +286,7 @@ class SubtitleProfile(BaseData):
             self.textbox_data = TextboxData()
         self.textbox_data.add_default(profile.textbox_data)
 
-        self.background_image_path = asc_override(self.background_image_path, profile.background_image_path, None)
+        self.background_image_path = coalesce(self.background_image_path, profile.background_image_path, None)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
