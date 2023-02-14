@@ -63,7 +63,7 @@ class SubtitleController:
         logger.info(f"Loaded subtitle profile: {filepath}.")
         self.subtitle_model.set_subtitle_profile_path(filepath)
 
-    def load_default_subtitle_profile_id(self, default_subtitle_profile_id):
+    def load_default_subtitle_profile_id(self, default_subtitle_profile_id=None):
         if default_subtitle_profile_id is None:
             logger.info("Default subtitle profile ID not explicitly stated: using 'default'.")
             default_subtitle_profile_id = "default"

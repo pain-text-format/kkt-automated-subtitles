@@ -176,10 +176,10 @@ def _get_subtitle_groups_from_yaml(textpath, subtitle_profiles:Optional[Dict[str
 
 
 text_profile_features_by_keys = {
-    "font": ["style", "color", "size", "stroke_color", "stroke_size"],
-    "outline1": ["color", "radius", "blur_strength"],
-    "outline2": ["color", "radius", "blur_strength"],
-    "box": ["alignment", "anchor_point", "box_width", "push"]
+    "font_data": ["style", "color", "size", "stroke_color", "stroke_size"],
+    "outline_data_1": ["color", "radius", "blur_strength"],
+    "outline_data_2": ["color", "radius", "blur_strength"],
+    "textbox_data": ["alignment", "anchor_point", "box_width", "push"]
 }
 
 
@@ -201,22 +201,22 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
     # first check if it is a profile ID field.
 
     # font (represents FontData)
-    # font.style
-    # font.color
-    # font.size
-    # font.stroke_color
-    # font.stroke_size
+    # font_data.style
+    # font_data.color
+    # font_data.size
+    # font_data.stroke_color
+    # font_data.stroke_size
 
-    # outlineN (represents OutlineData)
-    # outlineN.color
-    # outlineN.radius
-    # outlineN.blur_strength
+    # outline_data_n (represents OutlineData)
+    # outline_data_n.color
+    # outline_data_n.radius
+    # outline_data_n.blur_strength
 
-    # box (represents TextboxData)
-    # box.alignment
-    # box.anchor_point
-    # box.box_width
-    # box.push
+    # textbox_data (represents TextboxData)
+    # textbox_data.alignment
+    # textbox_data.anchor_point
+    # textbox_data.box_width
+    # textbox_data.push
     data_type, attribute, value = _get_profile_data_type_feature_and_value(line)
     if attribute is None:
         return subtitle
@@ -227,25 +227,25 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         subtitle.subtitle_profile_id = value
         return subtitle
 
-    if data_type == "font":
+    if data_type == "font_data":
         if subtitle.subtitle_profile.font_data is None:
             subtitle.subtitle_profile.font_data = FontData()
         setattr(subtitle.subtitle_profile.font_data, attribute, value)
         subtitle.subtitle_profile.font_data.correct_values()
         return subtitle
-    if data_type == "outline1":
+    if data_type == "outline_data_1":
         if subtitle.subtitle_profile.outline_data_1 is None:
             subtitle.subtitle_profile.outline_data_1 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_1, attribute, value)
         subtitle.subtitle_profile.outline_data_1.correct_values()
         return subtitle
-    if data_type == "outline2":
+    if data_type == "outline_data_2":
         if subtitle.subtitle_profile.outline_data_2 is None:
             subtitle.subtitle_profile.outline_data_2 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_2, attribute, value)
         subtitle.subtitle_profile.outline_data_2.correct_values()
         return subtitle
-    if data_type == "box":
+    if data_type == "textbox_data":
         if subtitle.subtitle_profile.textbox_data is None:
             subtitle.subtitle_profile.textbox_data = TextboxData()
         setattr(subtitle.subtitle_profile.textbox_data, attribute, value)
@@ -256,6 +256,9 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
 
 def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # limited functionality for text files. possibly more buggy.
+
+    # to prevent repetition and overriding existing subtitles, send the user warnings when there are dupe image IDs.
+    image_id_to_line_number = dict()
 
     with open(textpath, "r", encoding="utf-8") as reader:
         lines = reader.read().split("\n")
@@ -277,7 +280,14 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
 
     for i, line in enumerate(lines):
         if line.startswith("image_id:"):
-            subtitle_group.image_id = line.split(":")[1].lstrip()
+            image_id = line.split(":")[1].lstrip()
+
+            # duplicate handling.
+            if image_id in image_id_to_line_number.keys():
+                logger.warning(f"Found duplicate subtitle data for image ID {image_id}. Duplicate line numbers: {i+1}, {image_id_to_line_number[image_id]+1}")
+            image_id_to_line_number[image_id] = i
+
+            subtitle_group.image_id = image_id
             is_content_environment = False
             is_profile_environment = True
         elif line.startswith("content:"):

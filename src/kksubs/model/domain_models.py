@@ -73,6 +73,12 @@ class BaseData(ABC):
     def get_default(cls):
         ...
 
+def convert_color_str_to_tuple(color):
+    if (color[0]=="(" and color[-1]==")") or (color[0]=="[" and color[-1]=="]"):
+        str_data = color[1:-1]
+        return tuple(map(int, str_data.split(",")))
+    else:
+        return ImageColor.getrgb(color)
 
 class FontData(BaseData):
     def __init__(
@@ -90,7 +96,8 @@ class FontData(BaseData):
         if isinstance(self.color, list):
             self.color = (self.color[0], self.color[1], self.color[2])
         elif isinstance(self.color, str):
-            self.color = ImageColor.getrgb(self.color)
+            # use regex to check for the following formats: (a, b, c) or [a, b, c].
+            self.color = convert_color_str_to_tuple(self.color)
 
         if isinstance(self.stroke_color, list):
             self.stroke_color = (
@@ -99,7 +106,7 @@ class FontData(BaseData):
                 self.stroke_color[2]
             )
         elif isinstance(self.stroke_color, str):
-            self.stroke_color = ImageColor.getrgb(self.stroke_color)
+            self.stroke_color = convert_color_str_to_tuple(self.stroke_color)
 
     @classmethod
     def get_default(cls):
@@ -150,7 +157,7 @@ class OutlineData(BaseData):
         if isinstance(self.color, list):
             self.color = (self.color[0], self.color[1], self.color[2])
         elif isinstance(self.color, str):
-            self.color = ImageColor.getrgb(self.color)
+            self.color = convert_color_str_to_tuple(self.color)
         if isinstance(self.radius, str):
             self.radius = int(self.radius)
         if isinstance(self.blur_strength, str):
