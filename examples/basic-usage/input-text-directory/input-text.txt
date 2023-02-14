@@ -1,0 +1,16 @@
+image_id: 1.png
+content: This is text for the first image.
+
+image_id: 2.png
+content: This is text for the second image.
+This is a second line.
+
+image_id: 3.png
+content: This is text for the third image.
+
+After a space, this line will also be added.
+
+
+
+image_id: 4.png
+content: This is text for the last image. The empty space before image_id is ignored.

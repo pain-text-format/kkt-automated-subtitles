@@ -1,8 +1,0 @@
-- image_id: 1.png
-  subtitle_list:
-  - content:
-    - The text for the first image in red font.
-    subtitle_profile:
-      font_data:
-        color: [255, 0, 0]
-        size: 40

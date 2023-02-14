@@ -1,0 +1,14 @@
+- subtitle_profile_id: default
+  font_data:
+    stroke_color: white
+    stroke_size: 1
+  outline_data_1:
+    color: [255, 100, 100]
+    radius: 20
+    blur_strength: 10
+- subtitle_profile_id: blue outline
+  outline_data_1:
+    color: [0, 0, 255]
+- subtitle_profile_id: green outline
+  outline_data_1:
+    color: [0, 255, 0]

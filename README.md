@@ -82,7 +82,7 @@ When run, the program will add subtitles for each text file. This is useful for 
 ```
 
 ### Subtitle Profiles
-To customize a subtitle, we can use "subtitle profiles". Create a file called `subtitle_profiles.yaml` and add the following: (TODO)
+To customize a subtitle, we can use "subtitle profiles". Create a file called `subtitle_profiles.yaml` and add the following:
 ```
 - subtitle_profile_id: red_font_color
   font_data:
@@ -147,18 +147,14 @@ image_id: 2.png
 ```
 
 ### Using Configurations
-> TODO: add YAML support.
-> TODO: check this works.
 
-Instead of loading everything manually into the controller, you can use a `json` file to do it.
+Instead of loading everything manually into the controller, you can use a `yaml` file to do it.
 ```
-# config.json
-{
-    "input_text": input_text_directory,
-    "input_image": input_image_directory,
-    "output": output_directory,
-    "subtitle_profiles": path_to_subtitle_profiles
-}
+# config.yaml
+input_text_directory: input_text_directory
+input_image_directory: input_image_directory
+output_directory: output_directory
+subtitle_profile_path: path_to_subtitle_profiles
 ```
 Then you can just run this code.
 ```
