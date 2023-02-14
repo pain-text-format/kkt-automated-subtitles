@@ -254,10 +254,15 @@ class SubtitleProfile(BaseData):
             profile.font_data = FontData()
         profile.font_data.add_default()
 
+        if self.font_data is None:
+            self.font_data = coalesce(self.font_data, profile.font_data, FontData.get_default())
+        self.font_data.add_default(profile.font_data)
+
         # if no local outline data and no profile outline data, do not fill with global data.
         # if profile data, no local, create local, fill profile with global data, then local with profile.
         # if local data, no profile, fill local with global.
         # if local and profile, fill profile with global, then fill local with profile.
+        # TODO: simplify this code.
         if self.outline_data_1 is None and profile.outline_data_1 is None:
             pass
         elif self.outline_data_1 is None:
@@ -267,21 +272,25 @@ class SubtitleProfile(BaseData):
         elif profile.outline_data_1 is None:
             assert self.outline_data_1 is not None
             self.outline_data_1.add_default(OutlineData.get_default())
-
-
-        if self.font_data is None:
-            self.font_data = coalesce(self.font_data, profile.font_data, FontData.get_default())
-        self.font_data.add_default(profile.font_data)
         if self.outline_data_1 is not None:
             if profile.outline_data_1 is None:
                 profile.outline_data_1 = OutlineData()
             profile.outline_data_1.add_default(OutlineData.get_default())
             self.outline_data_1.add_default(profile.outline_data_1)
+        if self.outline_data_2 is None and profile.outline_data_2 is None:
+            pass
+        elif self.outline_data_2 is None:
+            self.outline_data_2 = OutlineData()
+            profile.outline_data_2.add_default(OutlineData.get_default())
+            self.outline_data_2.add_default(profile.outline_data_2)
+        elif profile.outline_data_2 is None:
+            self.outline_data_2.add_default(OutlineData.get_default())
         if self.outline_data_2 is not None:
             if profile.outline_data_2 is None:
                 profile.outline_data_2 = OutlineData()
             profile.outline_data_2.add_default(OutlineData.get_default())
             self.outline_data_2.add_default(profile.outline_data_2)
+
         if self.textbox_data is None:
             self.textbox_data = TextboxData()
         self.textbox_data.add_default(profile.textbox_data)

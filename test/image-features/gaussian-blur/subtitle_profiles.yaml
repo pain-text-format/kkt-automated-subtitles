@@ -4,8 +4,12 @@
     stroke_size: 1
   outline_data_1:
     color: [255, 100, 100]
-    radius: 20
-    blur_strength: 10
+    radius: 30
+    blur_strength: 15
+  # outline_data_2:
+  #   color: [255, 255, 255]
+  #   radius: 30
+  #   blur_strength: 15
 - subtitle_profile_id: blue outline
   outline_data_1:
     color: [0, 0, 255]
