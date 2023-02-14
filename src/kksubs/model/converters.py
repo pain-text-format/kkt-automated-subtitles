@@ -1,8 +1,11 @@
 import json
 import os
 from typing import Dict, Optional
+import logging
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 # convert and delegate
 
@@ -78,7 +81,11 @@ def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[
     # else, use global subtitle profile.
 
     if subtitle_profiles is not None and default_profile_id is not None:
-        default_profile = subtitle_profiles[default_profile_id]
+        if default_profile_id in subtitle_profiles.keys():
+            default_profile = subtitle_profiles[default_profile_id]
+        else:
+            logger.warning(f"The default subtitle with ID {default_profile_id} is not found: Using global default.")
+            default_profile = SubtitleProfile()
     else:
         default_profile = SubtitleProfile()
     default_profile.add_default()
@@ -86,7 +93,11 @@ def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[
     # check if subtitle profile ID exists, if exist --> get from subtitle profiles.
     # else, use default profile.
     if subtitle_profiles is not None and subtitle.subtitle_profile_id is not None:
-        subtitle_profile = subtitle_profiles[subtitle.subtitle_profile_id]
+        if subtitle.subtitle_profile_id in subtitle_profiles.keys():
+            subtitle_profile = subtitle_profiles[subtitle.subtitle_profile_id]
+        else:
+            logger.warning(f"The subtitle profile with ID {subtitle.subtitle_profile_id} is not found: Using global default.")
+            subtitle_profile = SubtitleProfile()
     else:
         subtitle_profile = SubtitleProfile()
     subtitle_profile.add_default(default_profile)
