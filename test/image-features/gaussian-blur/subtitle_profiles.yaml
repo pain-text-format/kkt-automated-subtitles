@@ -1,0 +1,5 @@
+- subtitle_profile_id: default
+  outline_data_1:
+    color: [255, 0, 0]
+    radius: 10
+    blur_strength: 10

@@ -45,11 +45,11 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
 
     # extract image data
     image_width, image_height = image.size
-    text_layer = Image.new("RGBA", image.size, (255, 255, 255, 0))
+    text_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
     text_draw = ImageDraw.Draw(text_layer)
-    outline_1_layer = Image.new("RGBA", image.size, (255, 255, 255, 0))
+    outline_1_layer = Image.new("RGBa", image.size, (0, 0, 0, 0))
     outline_1_draw = ImageDraw.Draw(outline_1_layer)
-    outline_2_layer = Image.new("RGBA", image.size, (255, 255, 255, 0))
+    outline_2_layer = Image.new("RGBa", image.size, (0, 0, 0, 0))
     outline_2_draw = ImageDraw.Draw(outline_2_layer)
 
     # extract text data
@@ -126,10 +126,12 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
     if outline_data_2 is not None:
         if outline_data_2.blur_strength is not None and outline_data_2.blur_strength:
             outline_2_layer = outline_2_layer.filter(ImageFilter.GaussianBlur(radius=outline_data_2.blur_strength))
+            outline_2_layer = outline_2_layer.convert("RGBA")
         image.paste(outline_2_layer, (0, 0), outline_2_layer)
     if outline_data_1 is not None:
         if outline_data_1.blur_strength is not None and outline_data_1.blur_strength:
             outline_1_layer = outline_1_layer.filter(ImageFilter.GaussianBlur(radius=outline_data_1.blur_strength))
+            outline_1_layer = outline_1_layer.convert("RGBA")
         image.paste(outline_1_layer, (0, 0), outline_1_layer)
 
     image.paste(text_layer, (0, 0), text_layer)
