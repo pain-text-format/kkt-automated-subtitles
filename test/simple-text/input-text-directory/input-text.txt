@@ -1,0 +1,27 @@
+image_id: 1.png
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+image_id: 2.png
+font_data.color: red
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+image_id: 3.png
+content: This data will be overridden and should trigger a duplicate subtitle warning.
+
+image_id: 3.png
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+This is a line after a new line.
+
+This is another line after a new line.
+
+image_id: 4.png
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+image_id: 5.png
+subtitle_profile_id: inverted
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+image_id: 6.png
+font_data.color: (10, 200, 10)
+content: Lorem ipsum dolor sit amet, consectetur adipiscing elit

@@ -35,27 +35,44 @@ class SubtitleController:
         logger.info("Session started.")
 
     # load methods save the inputs or metadata into the current session for future use.
-    def load_input_text_directory(self, directory):
+    def load_input_text_directory(self, directory=None):
+        if directory is None:
+            logger.info("Directory not explictly stated: searching for default input text directory.")
+            directory = "input-text-directory"
         logger.info(f"Loaded input text directory: {directory}.")
         self.subtitle_model.set_input_text_directory(directory)
 
-    def load_input_image_directory(self, directory):
+    def load_input_image_directory(self, directory=None):
+        if directory is None:
+            logger.info("Directory not explictly stated: searching for default input image directory.")
+            directory = "input-image-directory"
         logger.info(f"Loaded input image directory: {directory}.")
         self.subtitle_model.set_input_image_directory(directory)
 
-    def load_output_directory(self, directory):
+    def load_output_directory(self, directory=None):
+        if directory is None:
+            logger.info("Directory not explictly stated: searching for default output directory.")
+            directory = "output-directory"
         logger.info(f"Loaded output directory: {directory}.")
         self.subtitle_model.set_output_directory(directory)
 
-    def load_subtitle_profiles(self, filepath):
+    def load_subtitle_profiles(self, filepath=None):
+        if filepath is None:
+            logger.info("Subtitle profile path not explicitly stated: searching for default path.")
+            filepath = "subtitle_profiles.yaml"
         logger.info(f"Loaded subtitle profile: {filepath}.")
         self.subtitle_model.set_subtitle_profile_path(filepath)
 
-    def load_default_subtitle_profile_id(self, default_subtitle_profile_id):
+    def load_default_subtitle_profile_id(self, default_subtitle_profile_id=None):
+        if default_subtitle_profile_id is None:
+            logger.info("Default subtitle profile ID not explicitly stated: using 'default'.")
+            default_subtitle_profile_id = "default"
         logger.info(f"Loaded default subtitle profile ID: {default_subtitle_profile_id}.")
         self.subtitle_model.set_default_subtitle_profile_id(default_subtitle_profile_id)
 
-    def load_configs(self, filepath):
+    def load_configs(self, filepath=None):
+        if filepath is None:
+            logger.info("Config not explicitly stated: searching for 'config.yaml'.")
         configs_dict = _get_config_file_dict(filepath)
 
         input_text_directory = configs_dict["input_text_directory"]

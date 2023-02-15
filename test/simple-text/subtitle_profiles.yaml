@@ -1,0 +1,7 @@
+- subtitle_profile_id: default
+  textbox_data:
+    box_width: 80
+- subtitle_profile_id: inverted
+  font_data:
+    color: black
+    stroke_color: white

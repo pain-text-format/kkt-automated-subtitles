@@ -11,6 +11,10 @@ def _validate_font_data(font_data:FontData):
         raise KeyError
     if not os.path.exists(font_data.style):
         raise FileExistsError(f"Style {font_data.style} does not exist.")
+    if not isinstance(font_data.color, tuple):
+        raise TypeError(f"Type of font data color is {type(font_data.color)}")
+    if not isinstance(font_data.stroke_color, tuple):
+        raise TypeError
     
 def _validate_outline_data(outline_data:OutlineData):
     if not isinstance(outline_data.radius, int):

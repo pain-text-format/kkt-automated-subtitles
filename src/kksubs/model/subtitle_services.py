@@ -125,14 +125,24 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
     # apply paste
     if outline_data_2 is not None:
         if outline_data_2.blur_strength is not None and outline_data_2.blur_strength:
+            outline_2_over_base = image.copy()
+            outline_2_over_base.paste(outline_2_layer, (0, 0), outline_2_layer)
+            outline_2_over_base = outline_2_over_base.filter(ImageFilter.GaussianBlur(radius=outline_data_2.blur_strength))
             outline_2_layer = outline_2_layer.filter(ImageFilter.GaussianBlur(radius=outline_data_2.blur_strength))
             outline_2_layer = outline_2_layer.convert("RGBA")
-        image.paste(outline_2_layer, (0, 0), outline_2_layer)
+            image.paste(outline_2_over_base, (0, 0), outline_2_layer)
+        else:
+            image.paste(outline_2_layer, (0, 0), outline_2_layer)
     if outline_data_1 is not None:
         if outline_data_1.blur_strength is not None and outline_data_1.blur_strength:
+            outline_1_over_base = image.copy()
+            outline_1_over_base.paste(outline_1_layer, (0, 0), outline_1_layer)
+            outline_1_over_base = outline_1_over_base.filter(ImageFilter.GaussianBlur(radius=outline_data_1.blur_strength))
             outline_1_layer = outline_1_layer.filter(ImageFilter.GaussianBlur(radius=outline_data_1.blur_strength))
             outline_1_layer = outline_1_layer.convert("RGBA")
-        image.paste(outline_1_layer, (0, 0), outline_1_layer)
+            image.paste(outline_1_over_base, (0, 0), outline_1_layer)
+        else:
+            image.paste(outline_1_layer, (0, 0), outline_1_layer)
 
     image.paste(text_layer, (0, 0), text_layer)
 
