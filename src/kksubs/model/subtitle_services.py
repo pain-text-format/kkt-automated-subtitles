@@ -33,32 +33,15 @@ def blur_image(image:Image.Image, blur_strength) -> Image.Image:
     blurred_image = image.filter(ImageFilter.GaussianBlur(radius=blur_strength))
     return blurred_image
 
-def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
-    # applies data from the subtitle to the image.
-
+def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     # expand subtitle.
     subtitle_profile = subtitle.subtitle_profile
     content = subtitle.content
-
     # expand details of subtitle profile.
     font_data = subtitle_profile.font_data
     outline_data_1 = subtitle_profile.outline_data_1
     outline_data_2 = subtitle_profile.outline_data_2
     textbox_data = subtitle_profile.textbox_data
-    layer_data = subtitle_profile.layer_data
-
-    # add background image (if any)
-    if layer_data is not None:
-        background_path = layer_data.background_path
-        image_blur_strength = layer_data.blur_strength
-        image_brightness = layer_data.brightness
-        if background_path is not None:
-            background_image = Image.open(background_path)
-            image = apply_image(image, background_image)
-        if image_blur_strength is not None:
-            image = blur_image(image, image_blur_strength)
-        if image_brightness is not None:
-            image = adjust_brightness(image, image_brightness)
 
     # extract image data
     image_width, image_height = image.size
@@ -162,6 +145,32 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
             image.paste(outline_1_layer, (0, 0), outline_1_layer)
 
     image.paste(text_layer, (0, 0), text_layer)
+    return image
+
+def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
+    # applies data from the subtitle to the image.
+
+    # expand subtitle.
+    subtitle_profile = subtitle.subtitle_profile
+    content = subtitle.content
+
+    layer_data = subtitle_profile.layer_data
+
+    # add background image (if any)
+    if layer_data is not None:
+        background_path = layer_data.background_path
+        image_blur_strength = layer_data.blur_strength
+        image_brightness = layer_data.brightness
+        if background_path is not None:
+            background_image = Image.open(background_path)
+            image = apply_image(image, background_image)
+        if image_blur_strength is not None:
+            image = blur_image(image, image_blur_strength)
+        if image_brightness is not None:
+            image = adjust_brightness(image, image_brightness)
+
+    if content:
+        image = apply_text_to_image(image, subtitle)
 
     # add foreground image (if any)
     if layer_data is not None:
