@@ -250,17 +250,62 @@ class TextboxData(BaseData):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+class LayerData(BaseData):
+    # data concerning the image layer, rather than the subtitle.
+    # examples:
+    # text background, text foreground,
+    # image effects like image gaussian blur, image brightness.
+    def __init__(
+            self, 
+            background_path:Optional[str]=None, foreground_path:Optional[str]=None,
+            blur_strength:Optional[int]=None, brightness=None,
+    ):
+        self.background_path = background_path
+        self.foreground_path = foreground_path
+        self.blur_strength = blur_strength
+        self.brightness = brightness
+        super().__init__()
+
+    def correct_values(self):
+        if self.blur_strength is not None:
+            if isinstance(self.blur_strength, int):
+                pass
+            elif isinstance(self.blur_strength, str):
+                self.blur_strength = int(self.blur_strength)
+            else:
+                raise TypeError(f"Blur strength {self.blur_strength} is of type {type(self.blur_strength)}, not int.")
+            
+        if self.brightness is not None:
+            if isinstance(self.brightness, int):
+                pass
+            elif isinstance(self.brightness, str):
+                self.brightness = int(self.brightness)
+            else:
+                raise TypeError(f"Brightness {self.brightness} is of type {type(self.brightness)}, not int")
+            
+    def add_default(self, profile_data: "LayerData" = None):
+        if profile_data is None:
+            return
+        self.background_path = coalesce(self.background_path, profile_data.background_path)
+        self.foreground_path = coalesce(self.foreground_path, profile_data.foreground_path)
+        self.blur_strength = coalesce(self.blur_strength, profile_data.blur_strength)
+        self.brightness = coalesce(self.brightness, profile_data.brightness)
+
+    @classmethod
+    def get_default(cls):
+        return LayerData()
+
 
 class SubtitleProfile(BaseData):
 
     def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:OutlineData=None,
-                 textbox_data:Optional[TextboxData]=None, subtitle_profile_id:Optional[str]=None, background_image:Optional[str]=None):
+                 textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, subtitle_profile_id:Optional[str]=None):
         self.font_data = font_data
         self.outline_data_1 = outline_data_1
         self.outline_data_2 = outline_data_2
         self.textbox_data = textbox_data
         self.subtitle_profile_id = subtitle_profile_id
-        self.background_image_path = background_image
+        self.layer_data = layer_data
         super().__init__()
 
     def correct_values(self):
@@ -323,7 +368,9 @@ class SubtitleProfile(BaseData):
             self.textbox_data = TextboxData()
         self.textbox_data.add_default(profile.textbox_data)
 
-        self.background_image_path = coalesce(self.background_image_path, profile.background_image_path, None)
+        if self.layer_data is None:
+            self.layer_data = LayerData()
+        self.layer_data.add_default(profile.layer_data)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

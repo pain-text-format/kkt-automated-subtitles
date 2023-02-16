@@ -2,7 +2,7 @@ import logging
 
 import os
 from typing import List, Optional
-from kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
+from kksubs.model.domain_models import FontData, LayerData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,20 @@ def _validate_textbox_data(textbox_data:TextboxData):
     if not isinstance(textbox_data.box_width, int):
         raise TypeError(f"Textbox width {textbox_data.box_width} is of type {type(textbox_data.box_width)}, not int.")
 
+def _validate_layer_data(layer_data:LayerData):
+    if layer_data.background_path is not None:
+        if not os.path.exists(layer_data.background_path):
+            raise FileNotFoundError(layer_data.background_path)
+    if layer_data.foreground_path is not None:
+        if not os.path.exists(layer_data.foreground_path):
+            raise FileNotFoundError(layer_data.foreground_path)
+    if layer_data.blur_strength is not None:
+        if not isinstance(layer_data.blur_strength, int):
+            raise TypeError(type(layer_data.blur_strength))
+    if layer_data.brightness is not None:
+        if not isinstance(layer_data.brightness, float) and not isinstance(layer_data.brightness, int):
+            raise TypeError(type(layer_data.brightness))
+
 def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
     if subtitle_profile.font_data is None:
         raise AttributeError
@@ -46,6 +60,10 @@ def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
         raise NotImplementedError("Subtitle profile has no textbox data.")
     else:
         _validate_textbox_data(subtitle_profile.textbox_data)
+    if subtitle_profile.layer_data is None:
+        pass
+    else:
+        _validate_layer_data(subtitle_profile.layer_data)
     pass
 
 def _validate_subtitle_list(subtitle_list:List[Subtitle]) -> None:

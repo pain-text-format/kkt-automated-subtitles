@@ -2,7 +2,7 @@ import logging
 import os.path
 import textwrap
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
 from kksubs.model.data_access_services import SubtitleDataAccessService
 from kksubs.model.domain_models import Subtitle, SubtitleGroup
@@ -20,9 +20,18 @@ def _get_text_dimensions(text_string, font, default_text_width=None, default_tex
 
     return text_width, text_height
 
-def add_background(image:Image.Image, background_image) -> Image.Image:
+def apply_image(image:Image.Image, background_image) -> Image.Image:
     image.paste(background_image, (0, 0), background_image)
     return image
+
+def adjust_brightness(image:Image.Image, brightness) -> Image.Image:
+    enhancer = ImageEnhance.Brightness(image)
+    adjusted_image = enhancer.enhance(brightness)
+    return adjusted_image
+
+def blur_image(image:Image.Image, blur_strength) -> Image.Image:
+    blurred_image = image.filter(ImageFilter.GaussianBlur(radius=blur_strength))
+    return blurred_image
 
 def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     # applies data from the subtitle to the image.
@@ -36,12 +45,20 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
     outline_data_1 = subtitle_profile.outline_data_1
     outline_data_2 = subtitle_profile.outline_data_2
     textbox_data = subtitle_profile.textbox_data
-    background_image_path = subtitle_profile.background_image_path
+    layer_data = subtitle_profile.layer_data
 
     # add background image (if any)
-    if background_image_path is not None:
-        background_image = Image.open(background_image_path)
-        image = add_background(image, background_image)
+    if layer_data is not None:
+        background_path = layer_data.background_path
+        image_blur_strength = layer_data.blur_strength
+        image_brightness = layer_data.brightness
+        if background_path is not None:
+            background_image = Image.open(background_path)
+            image = apply_image(image, background_image)
+        if image_blur_strength is not None:
+            image = blur_image(image, image_blur_strength)
+        if image_brightness is not None:
+            image = adjust_brightness(image, image_brightness)
 
     # extract image data
     image_width, image_height = image.size
@@ -147,6 +164,11 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
     image.paste(text_layer, (0, 0), text_layer)
 
     # add foreground image (if any)
+    if layer_data is not None:
+        foreground_path = layer_data.foreground_path
+        if foreground_path is not None:
+            foreground_image = Image.open(foreground_path)
+            image = apply_image(image, foreground_image)
 
     return image
 

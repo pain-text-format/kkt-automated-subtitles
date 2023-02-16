@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # convert and delegate
 
-from kksubs.model.domain_models import SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
+from kksubs.model.domain_models import LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
 def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfile:
@@ -22,7 +22,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
     outline_data_2_key = "outline_data_2"
     textbox_data_key = "textbox_data"
     subtitle_id_key = "subtitle_profile_id"
-    background_image_key = "background_image_path"
+    layer_data_key = "layer_data"
 
     if font_data_key in keys:
         font_data = FontData()
@@ -63,11 +63,18 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         textbox_data.correct_values()
         subtitle_profile.textbox_data = textbox_data
         pass
+    if layer_data_key in keys:
+        layer_data = LayerData()
+        ldd:Dict = subtitle_profile_json[layer_data_key]
+        layer_data.background_path = ldd.get("background_path")
+        layer_data.foreground_path = ldd.get("foreground_path")
+        layer_data.blur_strength = ldd.get("blur_strength")
+        layer_data.brightness = ldd.get("brightness")
+        layer_data.correct_values()
+        subtitle_profile.layer_data = layer_data
+        pass
     if subtitle_id_key in keys:
         subtitle_profile.subtitle_profile_id = subtitle_profile_json.get(subtitle_id_key)
-        pass
-    if background_image_key in keys:
-        subtitle_profile.background_image_path = subtitle_profile_json.get(background_image_key)
         pass
     return subtitle_profile
 
@@ -179,7 +186,8 @@ text_profile_features_by_keys = {
     "font_data": ["style", "color", "size", "stroke_color", "stroke_size"],
     "outline_data_1": ["color", "radius", "blur_strength"],
     "outline_data_2": ["color", "radius", "blur_strength"],
-    "textbox_data": ["alignment", "anchor_point", "box_width", "push"]
+    "textbox_data": ["alignment", "anchor_point", "box_width", "push"],
+    "layer_data": ["background_path", "foreground_path", "blur_strength", "brightness"]
 }
 
 
@@ -250,6 +258,12 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
             subtitle.subtitle_profile.textbox_data = TextboxData()
         setattr(subtitle.subtitle_profile.textbox_data, attribute, value)
         subtitle.subtitle_profile.textbox_data.correct_values()
+        return subtitle
+    elif data_type == "layer_data":
+        if subtitle.subtitle_profile.layer_data is None:
+            subtitle.subtitle_profile.layer_data = LayerData()
+        setattr(subtitle.subtitle_profile.layer_data, attribute, value)
+        subtitle.subtitle_profile.layer_data.correct_values()
         return subtitle
     raise
 
