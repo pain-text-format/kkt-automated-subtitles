@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 from kksubs.model.domain_models import LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
-def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfile:
-    keys = subtitle_profile_json.keys()
+def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfile:
+    keys = subtitle_profile_dict.keys()
     subtitle_profile = SubtitleProfile()
 
     # keys
@@ -23,10 +23,11 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
     textbox_data_key = "textbox_data"
     subtitle_id_key = "subtitle_profile_id"
     layer_data_key = "layer_data"
+    default_text_key = "default_text"
 
     if font_data_key in keys:
         font_data = FontData()
-        font_data_dict = subtitle_profile_json[font_data_key]
+        font_data_dict = subtitle_profile_dict[font_data_key]
         font_data.style = font_data_dict.get("style")
         font_data.color = font_data_dict.get("color")
         font_data.size = font_data_dict.get("size")
@@ -37,7 +38,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         pass
     if outline_data_1_key in keys:
         outline_data_1 = OutlineData()
-        outline_data_dict = subtitle_profile_json[outline_data_1_key]
+        outline_data_dict = subtitle_profile_dict[outline_data_1_key]
         outline_data_1.color = outline_data_dict.get("color")
         outline_data_1.radius = outline_data_dict.get("radius")
         outline_data_1.blur_strength = outline_data_dict.get("blur_strength")
@@ -46,7 +47,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         pass
     if outline_data_2_key in keys:
         outline_data_2 = OutlineData()
-        outline_data_dict = subtitle_profile_json[outline_data_2_key]
+        outline_data_dict = subtitle_profile_dict[outline_data_2_key]
         outline_data_2.color = outline_data_dict.get("color")
         outline_data_2.radius = outline_data_dict.get("radius")
         outline_data_2.blur_strength = outline_data_dict.get("blur_strength")
@@ -55,7 +56,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         pass
     if textbox_data_key in keys:
         textbox_data = TextboxData()
-        textbox_data_dict = subtitle_profile_json[textbox_data_key]
+        textbox_data_dict = subtitle_profile_dict[textbox_data_key]
         textbox_data.alignment = textbox_data_dict.get("alignment")
         textbox_data.anchor_point = textbox_data_dict.get("anchor_point")
         textbox_data.box_width = textbox_data_dict.get("box_width")
@@ -65,7 +66,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         pass
     if layer_data_key in keys:
         layer_data = LayerData()
-        ldd:Dict = subtitle_profile_json[layer_data_key]
+        ldd:Dict = subtitle_profile_dict[layer_data_key]
         layer_data.background_path = ldd.get("background_path")
         layer_data.foreground_path = ldd.get("foreground_path")
         layer_data.blur_strength = ldd.get("blur_strength")
@@ -73,8 +74,11 @@ def _get_subtitle_profile_from_dict(subtitle_profile_json:Dict) -> SubtitleProfi
         layer_data.correct_values()
         subtitle_profile.layer_data = layer_data
         pass
+    if default_text_key in keys:
+        subtitle_profile.default_text = subtitle_profile_dict.get(default_text_key)
+        pass
     if subtitle_id_key in keys:
-        subtitle_profile.subtitle_profile_id = subtitle_profile_json.get(subtitle_id_key)
+        subtitle_profile.subtitle_profile_id = subtitle_profile_dict.get(subtitle_id_key)
         pass
     return subtitle_profile
 

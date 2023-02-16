@@ -299,13 +299,17 @@ class LayerData(BaseData):
 class SubtitleProfile(BaseData):
 
     def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:OutlineData=None,
-                 textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, subtitle_profile_id:Optional[str]=None):
+                 textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, default_text:Optional[str]=None,
+                 content_alias:Optional[str]=None, 
+                 subtitle_profile_id:Optional[str]=None):
         self.font_data = font_data
         self.outline_data_1 = outline_data_1
         self.outline_data_2 = outline_data_2
         self.textbox_data = textbox_data
         self.subtitle_profile_id = subtitle_profile_id
         self.layer_data = layer_data
+        self.default_text = default_text # text prepended to the first line of a subtitle during text application.
+        self.content_alias = content_alias # TODO implement: use to substitute `content:` while also injecting subtitle properties.
         super().__init__()
 
     def correct_values(self):
@@ -371,6 +375,8 @@ class SubtitleProfile(BaseData):
         if self.layer_data is None:
             self.layer_data = LayerData()
         self.layer_data.add_default(profile.layer_data)
+
+        self.default_text = coalesce(self.default_text, profile.default_text)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

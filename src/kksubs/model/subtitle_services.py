@@ -76,6 +76,14 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     outline_data_2 = subtitle_profile.outline_data_2
     textbox_data = subtitle_profile.textbox_data
 
+    # default text application.
+    default_text = subtitle_profile.default_text
+    if default_text is not None:
+        if content is None or len(content) == 0:
+            content = [default_text]
+        else:
+            content[0] = default_text + content[0]
+
     # extract image data
     image_width, image_height = image.size
     text_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
