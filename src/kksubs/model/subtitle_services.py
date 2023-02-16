@@ -29,9 +29,42 @@ def adjust_brightness(image:Image.Image, brightness) -> Image.Image:
     adjusted_image = enhancer.enhance(brightness)
     return adjusted_image
 
-def blur_image(image:Image.Image, blur_strength) -> Image.Image:
+def apply_gaussian_blur(image:Image.Image, blur_strength) -> Image.Image:
     blurred_image = image.filter(ImageFilter.GaussianBlur(radius=blur_strength))
     return blurred_image
+
+# TODO
+def apply_motion_blur(image:Image.Image, intensity, argument) -> Image.Image:
+    # apply motion blur with assigned intensity and radial argument (0-180 degrees ccw).
+    # radial argument can be either an int (degrees), or a string:
+    # h (horizontal), v (vertical), d (diagonal from top left), a (anti-diagonal from bottom left).
+    return image
+
+def circular_filter_rejection(fn):
+    # applies a mask that rejects a filter about a circle on the image. The rejection is smoothed on the boundary via gaussian filtering.
+
+    def filter_fn(image, *args, mask_radius:int=None, mask_blur_strength:int=None, mask_displacement:tuple=None, **kwargs):
+        if mask_radius is None:
+            mask_radius = 200
+        if mask_blur_strength is None:
+            mask_blur_strength = 200
+        if mask_displacement is None:
+            mask_displacement = (0, 0)
+        
+        dis_x, dis_y = mask_displacement # displacement from center.
+        image_width, image_height = image.size
+        x, y = image_width//2+dis_x, image_height//2+dis_y # new center of focus.
+        filtered_image = fn(image, *args, **kwargs)
+        mask_layer = Image.new("RGB", image.size, "white")
+        mask_draw = ImageDraw.Draw(mask_layer)
+        mask_draw.ellipse((x-mask_radius, y-mask_radius, x+mask_radius, y+mask_radius), fill="black")
+        mask_layer = mask_layer.convert("L").filter(ImageFilter.GaussianBlur(radius=mask_blur_strength))
+        image.paste(filtered_image, (0, 0), mask_layer)
+        return image
+    
+    return filter_fn
+
+focal_blur_image = circular_filter_rejection(apply_gaussian_blur)
 
 def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     # expand subtitle.
@@ -165,7 +198,7 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
             background_image = Image.open(background_path)
             image = apply_image(image, background_image)
         if image_blur_strength is not None:
-            image = blur_image(image, image_blur_strength)
+            image = apply_gaussian_blur(image, image_blur_strength)
         if image_brightness is not None:
             image = adjust_brightness(image, image_brightness)
 
