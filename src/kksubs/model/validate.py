@@ -2,7 +2,7 @@
 
 import os
 from typing import List
-from kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile
+from kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
 
 def _validate_font_data(font_data:FontData):
     if font_data is None:
@@ -20,6 +20,12 @@ def _validate_outline_data(outline_data:OutlineData):
     if not isinstance(outline_data.radius, int):
         raise TypeError(f"{outline_data.radius} is a {type(outline_data.radius)}")
 
+def _validate_textbox_data(textbox_data:TextboxData):
+    if not isinstance(textbox_data.alignment, str):
+        raise TypeError
+    if not isinstance(textbox_data.box_width, int):
+        raise TypeError(f"Textbox width {textbox_data.box_width} is of type {type(textbox_data.box_width)}, not int.")
+
 def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
     if subtitle_profile.font_data is None:
         raise AttributeError
@@ -34,6 +40,10 @@ def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
         pass
     else:
         _validate_outline_data(subtitle_profile.outline_data_2)
+    if subtitle_profile.textbox_data is None:
+        raise NotImplementedError("Subtitle profile has no textbox data.")
+    else:
+        _validate_textbox_data(subtitle_profile.textbox_data)
     pass
 
 def _validate_subtitle_list(subtitle_list:List[Subtitle]) -> None:

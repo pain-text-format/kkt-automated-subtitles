@@ -215,14 +215,22 @@ class TextboxData(BaseData):
 
     def correct_values(self):
         if self.anchor_point is not None:
-            if isinstance(self.anchor_point, str):
+            if isinstance(self.anchor_point, tuple):
+                pass
+            elif isinstance(self.anchor_point, str):
                 self.anchor_point = tuple(map(int, self.anchor_point[1:-1].split(",")))
             elif isinstance(self.anchor_point, list):
                 self.anchor_point = (int(self.anchor_point[0]), int(self.anchor_point[1]))
-            elif isinstance(self.anchor_point, tuple):
-                pass
             else:
                 raise TypeError(f"Anchor point has invalid type: {self.anchor_point} is of type {type(self.anchor_point)}.")
+        if self.box_width is not None:
+            if isinstance(self.box_width, int):
+                pass
+            elif isinstance(self.box_width, str):
+                self.box_width = int(self.box_width)
+            else:
+                raise TypeError(f"Box width has invalid type: {self.box_width} is of type {type(self.box_width)}")
+
 
     @classmethod
     def get_default(cls):

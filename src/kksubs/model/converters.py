@@ -253,16 +253,11 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         return subtitle
     raise
 
-
-def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
-    # limited functionality for text files. possibly more buggy.
-
+def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # to prevent repetition and overriding existing subtitles, send the user warnings when there are dupe image IDs.
     image_id_to_line_number = dict()
-
-    with open(textpath, "r", encoding="utf-8") as reader:
-        lines = reader.read().split("\n")
-
+    
+    lines = textstring.split("\n")
     subtitle_groups_by_path = dict()
 
     subtitle_group = SubtitleGroup(subtitle_list=[])
@@ -304,8 +299,10 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
             if line == "":
                 is_empty = True
                 empty_strings.append(line)
-                if i+1<len(lines) and (lines[i+1].startswith("content:") or lines[i+1].startswith("image_id:")):
-                    empty_strings = []
+                if i+1<len(lines):
+                    data_type, feature, value = _get_profile_data_type_feature_and_value(lines[i+1])
+                    if data_type is not None or lines[i+1].startswith("content:") or lines[i+1].startswith("image_id:"):
+                        empty_strings = []
             else:
                 if is_empty:
                     subtitle.content.extend(empty_strings)
@@ -352,6 +349,12 @@ def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str
         pass
 
     return subtitle_groups_by_path
+
+def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+    # limited functionality for text files. possibly more buggy.
+    with open(textpath, "r", encoding="utf-8") as reader:
+        textstring = reader.read()
+    return _get_subtitle_groups_from_textstring(textstring, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
 
 
 def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
