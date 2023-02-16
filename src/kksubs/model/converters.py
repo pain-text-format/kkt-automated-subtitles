@@ -227,25 +227,25 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         subtitle.subtitle_profile_id = value
         return subtitle
 
-    if data_type == "font_data":
+    elif data_type == "font_data":
         if subtitle.subtitle_profile.font_data is None:
             subtitle.subtitle_profile.font_data = FontData()
         setattr(subtitle.subtitle_profile.font_data, attribute, value)
         subtitle.subtitle_profile.font_data.correct_values()
         return subtitle
-    if data_type == "outline_data_1":
+    elif data_type == "outline_data_1":
         if subtitle.subtitle_profile.outline_data_1 is None:
             subtitle.subtitle_profile.outline_data_1 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_1, attribute, value)
         subtitle.subtitle_profile.outline_data_1.correct_values()
         return subtitle
-    if data_type == "outline_data_2":
+    elif data_type == "outline_data_2":
         if subtitle.subtitle_profile.outline_data_2 is None:
             subtitle.subtitle_profile.outline_data_2 = OutlineData()
         setattr(subtitle.subtitle_profile.outline_data_2, attribute, value)
         subtitle.subtitle_profile.outline_data_2.correct_values()
         return subtitle
-    if data_type == "textbox_data":
+    elif data_type == "textbox_data":
         if subtitle.subtitle_profile.textbox_data is None:
             subtitle.subtitle_profile.textbox_data = TextboxData()
         setattr(subtitle.subtitle_profile.textbox_data, attribute, value)
