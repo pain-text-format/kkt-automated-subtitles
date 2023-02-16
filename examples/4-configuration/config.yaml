@@ -1,0 +1,6 @@
+# config.yaml
+input_text_directory: examples/4-configuration/input-text-directory
+input_image_directory: examples/sample-images
+output_directory: examples/4-configuration/output-directory
+subtitle_profile_path: examples/4-configuration/subtitle_profiles.yaml
+default_subtitle_profile_id: default

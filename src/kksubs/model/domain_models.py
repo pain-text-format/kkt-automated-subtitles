@@ -108,6 +108,19 @@ class FontData(BaseData):
         elif isinstance(self.stroke_color, str):
             self.stroke_color = convert_color_str_to_tuple(self.stroke_color)
 
+        if self.size is not None:
+            if not isinstance(self.size, int):
+                if isinstance(self.size, str):
+                    self.size = int(self.size)
+                else:
+                    raise TypeError(f"Font size {self.size} is type {type(self.size)}.")
+        if self.stroke_size is not None:
+            if not isinstance(self.stroke_size, int):
+                if isinstance(self.stroke_size, str):
+                    self.stroke_size = int(self.stroke_size)
+                else:
+                    raise TypeError(f"Font size {self.stroke_size} is type {type(self.stroke_size)}.")
+
     @classmethod
     def get_default(cls):
         font_data = FontData()

@@ -1,0 +1,9 @@
+- subtitle_profile_id: default
+  textbox_data:
+    anchor_point: [0, -400]
+    push: up
+- subtitle_profile_id: top
+  textbox_data:
+    anchor_point: [0, 400]
+    box_width: 80
+    push: down

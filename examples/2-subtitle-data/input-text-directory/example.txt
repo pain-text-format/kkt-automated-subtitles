@@ -1,0 +1,27 @@
+image_id: 1.png
+content: This is a normal line of font.
+
+image_id: 2.png
+font_data.style: examples/2-subtitle-data/Ubuntu-Regular.ttf
+font_data.color: [255, 0, 0]
+font_data.size: 70
+font_data.stroke_color: [0, 0, 255]
+font_data.stroke_size: 3
+content: This is a line of font where 
+I change various font properties like color, style, etc.
+
+image_id: 3.png
+outline_data_1.color: white
+outline_data_1.radius: 10
+outline_data_2.color: pink
+outline_data_2.radius: 20
+outline_data_2.blur_strength: 5
+content: Add (up to two) outlines
+and customize blur for outer outline.
+
+image_id: 4.png
+textbox_data.alignment: left
+content: a left aligned text.
+
+textbox_data.alignment: right
+content: a right aligned text.
