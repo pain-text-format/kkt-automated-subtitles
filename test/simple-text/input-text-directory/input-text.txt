@@ -25,3 +25,6 @@ content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
 image_id: 6.png
 font_data.color: (10, 200, 10)
 content: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+image_id: 7.png
+content: This will have no effect, but should trigger warning.

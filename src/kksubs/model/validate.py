@@ -1,8 +1,10 @@
-
+import logging
 
 import os
-from typing import List
+from typing import List, Optional
 from kksubs.model.domain_models import FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
+
+logger = logging.getLogger(__name__)
 
 def _validate_font_data(font_data:FontData):
     if font_data is None:
@@ -52,7 +54,10 @@ def _validate_subtitle_list(subtitle_list:List[Subtitle]) -> None:
             _validate_subtitle_profile(subtitle.subtitle_profile)
     pass
 
-def validate_subtitle_group(subtitle_group:SubtitleGroup) -> None:
+def validate_subtitle_group(subtitle_group:SubtitleGroup, image_id_set:Optional[set]=None) -> None:
+    if image_id_set is not None:
+        if subtitle_group.image_id not in image_id_set:
+            logger.warning(f"Invalid image ID {subtitle_group.image_id}: this subtitle group will have no effect.")
     # check the data does not have issues.
 
     if subtitle_group.subtitle_list is not None:

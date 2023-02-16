@@ -190,14 +190,16 @@ class SubtitleService:
     def add_subtitles(self, filter_list=None):
         # add subtitles to images.
 
+        image_paths = self.subtitle_model.get_image_paths()
+        image_paths.sort()
+        image_ids = list(map(os.path.basename, image_paths))
+        image_id_set = set(image_ids)
+
         subtitle_groups = self.subtitle_model.get_subtitle_groups()
         # validation layer here.
         for text_id in subtitle_groups.keys():
             for image_id in subtitle_groups.get(text_id).keys():
-                validate_subtitle_group(subtitle_groups.get(text_id).get(image_id))
-
-        image_paths = self.subtitle_model.get_image_paths()
-        image_paths.sort()
+                validate_subtitle_group(subtitle_groups.get(text_id).get(image_id), image_id_set=image_id_set)
         
         if filter_list is not None:
             image_paths = list(map(lambda i:image_paths[i], filter_list))
@@ -214,7 +216,7 @@ class SubtitleService:
                 os.makedirs(output_directory_by_text_id)
 
             for i, image_path in enumerate(image_paths):
-                image_id = os.path.basename(image_path)
+                image_id = image_ids[i]
                 output_image_path = os.path.join(output_directory_by_text_id, image_id)
                 if image_id in subtitle_group_by_text_id.keys():
                     subtitle_group = subtitle_group_by_text_id[image_id]
