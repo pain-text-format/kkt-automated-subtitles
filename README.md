@@ -31,7 +31,7 @@ content: Hello world
 ```
 while the file `example.png` is the target image to be subtitled. For example:
 
-![example](examples\sample-images\3.png)
+![example](examples/0-readme/input_image_directory/example.png)
 
 Create `script.py` and run:
 ```
@@ -51,6 +51,6 @@ controller.add_subtitles()
 
 The result will be saved in `output_directory/example/example.png`:
 
-![subtitled_example](examples\0-readme\output_directory\example\example.png)
+![subtitled_example](examples/0-readme/output_directory/example/example.png)
 
 More examples are demonstrated in the `examples` folder.
