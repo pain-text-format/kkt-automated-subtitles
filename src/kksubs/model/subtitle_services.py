@@ -116,6 +116,8 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
             wrapped_text.extend(textwrap.wrap(line, width=box_width))
         else:
             wrapped_text.append("")
+    if not wrapped_text:
+        return image
 
     text_dimensions = [_get_text_dimensions(line, font, default_text_width=default_text_width, default_text_height=default_text_height) for line in wrapped_text]
     text_widths = list(map(lambda dim:dim[0], text_dimensions))
@@ -275,6 +277,7 @@ class SubtitleService:
         
         if filter_list is not None:
             image_paths = list(map(lambda i:image_paths[i], filter_list))
+            image_ids = list(map(os.path.basename, image_paths))
 
         n = len(image_paths)
 
@@ -296,7 +299,7 @@ class SubtitleService:
                     processed_image.save(output_image_path)
                 else:
                     Image.open(image_path).save(output_image_path)
-                logger.info(f"Processed and saved image {i+1}/{n} for text_id {os.path.splitext(os.path.basename(text_id))[0]}.")
+                logger.info(f"Processed and saved image {i+1}/{n} ({image_id}) for text_id {os.path.splitext(os.path.basename(text_id))[0]}.")
 
         pass
 

@@ -348,6 +348,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
             subtitle.subtitle_profile.add_default()
             subtitle_group.subtitle_list.append(subtitle)
+            empty_strings = []
             subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
 
         if i+1<len(lines):
@@ -359,6 +360,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                     raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
                 subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
+                empty_strings = []
                 subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
             data_type, feature, value = _get_profile_data_type_feature_and_value(lines[i+1])
@@ -370,6 +372,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                     raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
                 subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
+                empty_strings = []
                 subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
             # subtitle group
@@ -377,6 +380,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
                 subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
+                empty_strings = []
                 subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
                 subtitle_group = SubtitleGroup(subtitle_list=[])
                 subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())

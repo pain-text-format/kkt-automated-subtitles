@@ -102,7 +102,7 @@ class SubtitleDataAccessService:
         image_paths = self.get_image_paths()
         image_ids = list(map(lambda path:os.path.basename(path), image_paths))
         
-        lines = "\n".join([f"image_id: {image_id}\ncontent: " for image_id in image_ids])
+        lines = "\n".join([f"image_id: {image_id}\n" for image_id in image_ids])
         with open(output_path, "w", encoding="utf-8") as writer:
             writer.write(lines)
 
@@ -142,10 +142,10 @@ class SubtitleDataAccessService:
             yaml.dump(subtitle_group_list, yaml_writer, default_flow_style=False)
 
     def generate_input_subtitle_template(self, output_path, existing_subtitle_file:str=None):
-        extension = os.path.basename(output_path)
+        extension = os.path.splitext(output_path)[1]
         if extension in {".yaml", ".yml"}:
             self.generate_input_subtitle_template_for_yaml(output_path, current_yaml_input_path=existing_subtitle_file)
         if extension in {".txt"}:
-            self.generate_input_subtitle_template_for_text()
+            self.generate_input_subtitle_template_for_text(output_path)
 
     pass
