@@ -210,7 +210,7 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
         if image_brightness is not None:
             image = adjust_brightness(image, image_brightness)
 
-    if content:
+    if content is not None:
         image = apply_text_to_image(image, subtitle)
 
     # add foreground image (if any)

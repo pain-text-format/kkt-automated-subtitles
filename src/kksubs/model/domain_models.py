@@ -300,7 +300,6 @@ class SubtitleProfile(BaseData):
 
     def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:OutlineData=None,
                  textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, default_text:Optional[str]=None,
-                 content_alias:Optional[str]=None, 
                  subtitle_profile_id:Optional[str]=None):
         self.font_data = font_data
         self.outline_data_1 = outline_data_1
@@ -309,7 +308,6 @@ class SubtitleProfile(BaseData):
         self.subtitle_profile_id = subtitle_profile_id
         self.layer_data = layer_data
         self.default_text = default_text # text prepended to the first line of a subtitle during text application.
-        self.content_alias = content_alias # TODO implement: use to substitute `content:` while also injecting subtitle properties.
         super().__init__()
 
     def correct_values(self):

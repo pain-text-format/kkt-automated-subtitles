@@ -47,10 +47,7 @@ def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
         raise AttributeError
     else:
         _validate_font_data(subtitle_profile.font_data)
-    
-    if subtitle_profile.content_alias is not None:
-        if not isinstance(subtitle_profile.content_alias, str):
-            raise TypeError(type(subtitle_profile.content_alias))
+        
     if subtitle_profile.default_text is not None:
         if not isinstance(subtitle_profile.default_text, str):
             raise TypeError(type(subtitle_profile.default_text))

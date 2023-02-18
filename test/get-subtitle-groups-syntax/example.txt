@@ -1,0 +1,18 @@
+image_id: 1.png
+content: This is text for the first image.
+Hello: world
+
+image_id: 2.png
+content: This is text for the second image.
+This is a second line.
+
+image_id: 3.png
+red: This is text for the third image.
+
+After a space, this line will also be added.
+textbox_data.anchor_point: [0, 200]
+speaker:
+
+
+image_id: 4.png
+content: This is text for the last image. The empty space before image_id is ignored.

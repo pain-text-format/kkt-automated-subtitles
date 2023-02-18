@@ -1,0 +1,10 @@
+- subtitle_profile_id: default
+  textbox_data:
+    anchor_point: [0, -300]
+- subtitle_profile_id: red
+  font_data:
+    color: red
+- subtitle_profile_id: speaker
+  font_data:
+    color: blue
+  default_text: "Speaker: "

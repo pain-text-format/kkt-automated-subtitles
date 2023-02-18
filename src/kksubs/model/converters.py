@@ -271,6 +271,14 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         return subtitle
     raise
 
+def get_profile_alias(line:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None):
+    if subtitle_profiles is None:
+        return None
+    for profile_id in subtitle_profiles.keys():
+        if line.startswith(f"{subtitle_profiles[profile_id].subtitle_profile_id}:"):
+            return profile_id
+    return None
+
 def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # to prevent repetition and overriding existing subtitles, send the user warnings when there are dupe image IDs.
     image_id_to_line_number = dict()
@@ -292,6 +300,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
     empty_strings = []
 
     for i, line in enumerate(lines):
+        profile_alias = get_profile_alias(line, subtitle_profiles=subtitle_profiles)
         if line.lower().startswith("image_id:"):
             image_id = line.split(":")[1].lstrip()
 
@@ -303,12 +312,15 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
             subtitle_group.image_id = image_id
             is_content_environment = False
             is_profile_environment = True
-        elif line.lower().startswith("content:"):
+        elif line.lower().startswith("content:") or profile_alias is not None:
             is_content_environment = True
             is_profile_environment = False
             line = line.split(":", 1)[1].lstrip()
 
         # local profile properties start from after image_id and end before content environment.
+        if profile_alias is not None:
+            subtitle.subtitle_profile_id = profile_alias
+            subtitle = _add_text_data_to_subtitle(subtitle, line)
         if is_profile_environment:
             subtitle = _add_text_data_to_subtitle(subtitle, line)
 
@@ -316,7 +328,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
         if is_content_environment:
             if line == "":
                 is_empty = True
-                empty_strings.append(line)
+                empty_strings.append("")
                 if i+1<len(lines):
                     data_type, feature, value = _get_profile_data_type_feature_and_value(lines[i+1])
                     if data_type is not None or lines[i+1].lower().startswith("content:") or lines[i+1].lower().startswith("image_id:"):
@@ -334,15 +346,18 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
             _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
             if subtitle.subtitle_profile.font_data is None:
                 raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
+            subtitle.subtitle_profile.add_default()
             subtitle_group.subtitle_list.append(subtitle)
             subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
 
         if i+1<len(lines):
             # subtitle: the current subtitle environment ends when the next line is content or a file for subtitle profile.
-            if is_content_environment and i+1<len(lines) and lines[i+1].lower().startswith("content:"):
+            next_profile_alias = get_profile_alias(lines[i+1], subtitle_profiles=subtitle_profiles)
+            if is_content_environment and i+1<len(lines) and (lines[i+1].lower().startswith("content:") or next_profile_alias is not None):
                 _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
                 if subtitle.subtitle_profile.font_data is None:
                     raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
+                subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
                 subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
@@ -353,12 +368,14 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
                 if subtitle.subtitle_profile.font_data is None:
                     raise TypeError(f"Subtitle profile error: {subtitle.subtitle_profile.__dict__}")
+                subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
                 subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
 
             # subtitle group
             elif i+1<len(lines) and lines[i+1].lower().startswith("image_id:") and subtitle_group.image_id is not None:
                 _inject_subtitle_profile_data(subtitle, subtitle_profiles, default_profile_id)
+                subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
                 subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
                 subtitle_group = SubtitleGroup(subtitle_list=[])
