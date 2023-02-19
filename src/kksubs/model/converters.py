@@ -93,7 +93,8 @@ def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[
 
     if subtitle_profiles is not None and default_profile_id is not None:
         if default_profile_id in subtitle_profiles.keys():
-            default_profile = subtitle_profiles[default_profile_id]
+            default_profile = SubtitleProfile()
+            default_profile.add_default(subtitle_profiles[default_profile_id])
         else:
             logger.warning(f"The default subtitle with ID {default_profile_id} is not found: Using global default.")
             default_profile = SubtitleProfile()
