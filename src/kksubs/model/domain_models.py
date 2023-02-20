@@ -199,7 +199,7 @@ class OutlineData(BaseData):
 
 
 class TextboxData(BaseData):
-    def __init__(self, alignment:str=None, anchor_point=None, box_width:Optional[int]=None, push:Optional[str]=None):
+    def __init__(self, alignment:str=None, anchor_point=None, grid4=None, box_width:Optional[int]=None, push:Optional[str]=None):
         """
         :param alignment: left, right or center.
         :param anchor_point: [x, y] values of the anchor point. x value is left/right border of textbox if textbox is
@@ -210,10 +210,20 @@ class TextboxData(BaseData):
         self.anchor_point = anchor_point
         self.box_width = box_width
         self.push = push # direction from the first line of text.
+        self.grid4 = grid4 # a coordinate point representing a point on a 4ths grid.
         self.correct_values()
         super().__init__()
 
     def correct_values(self):
+        if self.grid4 is not None:
+            if isinstance(self.grid4, tuple):
+                pass
+            elif isinstance(self.grid4, str):
+                self.grid4 = tuple(map(int, self.grid4[1:-1].split(",")))
+            elif isinstance(self.grid4, list):
+                self.grid4 = (int(self.grid4[0]), int(self.grid4[1]))
+            else:
+                raise TypeError(f"Grid4 has invalid type: {self.grid4} is of type {type(self.grid4)}")
         if self.anchor_point is not None:
             if isinstance(self.anchor_point, tuple):
                 pass

@@ -27,4 +27,10 @@ class TestSubtitles(unittest.TestCase):
         self.assertEqual(subtitle_group.subtitle_list[0].subtitle_profile.layer_data.blur_strength, None)
         self.assertEqual(subtitle_group.subtitle_list[0].subtitle_profile.layer_data.brightness, None)
 
+    def test_grid4(self):
+        test_string = "image_id: 1.png\ntextbox_data.grid4: [0, 0]\ncontent: Hello world"
+        subtitle_groups = _get_subtitle_groups_from_textstring(test_string)
+        subtitle_group = subtitle_groups["1.png"]
+        self.assertEqual(subtitle_group.subtitle_list[0].subtitle_profile.textbox_data.grid4, (0, 0))
+
     pass

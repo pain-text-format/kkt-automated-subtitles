@@ -27,6 +27,13 @@ def _validate_textbox_data(textbox_data:TextboxData):
         raise TypeError
     if not isinstance(textbox_data.box_width, int):
         raise TypeError(f"Textbox width {textbox_data.box_width} is of type {type(textbox_data.box_width)}, not int.")
+    if textbox_data.grid4 is not None:
+        if not isinstance(textbox_data.grid4, tuple):
+            raise TypeError(type(textbox_data.grid4))
+        if not (isinstance(textbox_data.grid4[0], int) and isinstance(textbox_data.grid4[1], int)):
+            raise TypeError(f"Textbox data does not contain ints: {(textbox_data.grid4[0], type(textbox_data.grid4[0]))}, {(textbox_data.grid4[1], type(textbox_data.grid4[1]))}")
+        if not ((0 <= textbox_data.grid4[0] <= 4) and (0 <= textbox_data.grid4[0] <= 4)):
+            raise ValueError(f"Values not between 0 and 4: {textbox_data.grid4}")
 
 def _validate_layer_data(layer_data:LayerData):
     if layer_data.background_path is not None:

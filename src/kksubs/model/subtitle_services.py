@@ -1,7 +1,7 @@
 import logging
 import os.path
 import textwrap
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
@@ -101,9 +101,24 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     font_stroke_size = font_data.stroke_size
     font_stroke_color = font_data.stroke_color
     alignment = textbox_data.alignment
-    tb_anchor_x, tb_anchor_y = textbox_data.anchor_point
     box_width = textbox_data.box_width
     push = textbox_data.push
+
+    if textbox_data.grid4 is not None:
+        grid4_x, grid4_y = textbox_data.grid4
+        tb_anchor_x = int(image_width//4*grid4_x)
+        tb_anchor_y = int(image_height//4*grid4_y)
+        print(tb_anchor_x, tb_anchor_y)
+        
+        if textbox_data.anchor_point is not None: # if there is anchor point data, use it to fine-tune.
+            x_adjust, y_adjust = textbox_data.anchor_point
+            tb_anchor_x = tb_anchor_x + x_adjust
+            tb_anchor_y = tb_anchor_y - y_adjust
+
+    else:
+        tb_anchor_x, tb_anchor_y = textbox_data.anchor_point
+        tb_anchor_x = image_width/2 + tb_anchor_x
+        tb_anchor_y = image_height/2 - tb_anchor_y
 
     font = ImageFont.truetype(font_style, font_size)
     # this is used to standardize the heights of each horizontal text line, but might be a bad idea for different languages.
@@ -131,17 +146,17 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
         text_width = font.getlength(line)
 
         if alignment == "left":
-            x = (image_width + text_width)/2 + tb_anchor_x - text_width/2
+            x = tb_anchor_x + text_width/2 - text_width/2
         elif alignment == "center":
-            x = image_width/2 + tb_anchor_x - text_width/2
+            x = tb_anchor_x - text_width/2
         elif alignment == "right":
-            x = (image_width - text_width)/2 + tb_anchor_x - text_width/2
+            x = tb_anchor_x - text_width/2 - text_width/2
         else:
             raise ValueError(f"Invalid alignment value {alignment}.")
         if push == "up":
-            y = image_height/2 - tb_anchor_y + (- default_text_height*(num_lines-i))
+            y = tb_anchor_y + (- default_text_height*(num_lines-i))
         elif push == "down":
-            y = image_height/2 - tb_anchor_y + (sum_text_height - default_text_height*(num_lines-i))
+            y = tb_anchor_y + (sum_text_height - default_text_height*(num_lines-i))
         else:
             raise ValueError(f"Invalid push value {push}.")
         line_pos = (x, y)
@@ -262,7 +277,7 @@ class SubtitleService:
             image = apply_subtitle_to_image(image, subtitle)
         return image
 
-    def add_subtitles(self, filter_dict:Dict[str, List[int]]=None):
+    def add_subtitles(self, filter_dict:Dict[str, Union[List[int], str]]=None):
         # add subtitles to images.
 
         image_paths = self.subtitle_model.get_image_paths()
@@ -279,19 +294,27 @@ class SubtitleService:
         for text_path in subtitle_groups.keys():
             
             text_id = os.path.splitext(os.path.basename(text_path))[0]
-            if filter_dict is not None and text_id in filter_dict.keys() and filter_dict.get(text_id) is not None:
-                filter_list = filter_dict.get(text_id)
-                filtered_image_paths = []
-                for index in filter_list:
-                    if 0 <= index <= len(image_paths)-1:
-                        filtered_image_paths.append(image_paths[index])
-                    else:
-                        logger.warning(f"Index {index} is out of bounds for image list with {len(image_paths)} images, skipping.")
-                # filtered_image_paths = list(map(lambda i:image_paths[i]), filter_list)
-                filtered_image_ids = list(map(os.path.basename, filtered_image_paths))
+            if filter_dict is not None:
+                if text_id in filter_dict.keys():
+                    if isinstance(filter_dict.get(text_id), list):
+                        filter_list = filter_dict.get(text_id)
+                        filtered_image_paths = []
+                        for index in filter_list:
+                            if 0 <= index <= len(image_paths)-1:
+                                filtered_image_paths.append(image_paths[index])
+                            else:
+                                logger.warning(f"Index {index} is out of bounds for image list with {len(image_paths)} images, skipping.")
+                        # filtered_image_paths = list(map(lambda i:image_paths[i]), filter_list)
+                        filtered_image_ids = list(map(os.path.basename, filtered_image_paths))
+                    elif isinstance(filter_dict.get(text_id), str) and filter_dict.get(text_id) == "all":
+                        filtered_image_paths = image_paths
+                        filtered_image_ids = image_ids
+                else:
+                    continue
             else:
                 filtered_image_paths = image_paths
                 filtered_image_ids = image_ids
+
             n = len(filtered_image_paths)
             logger.info(f"Gathered {n} images to process: {filtered_image_ids}.")
 

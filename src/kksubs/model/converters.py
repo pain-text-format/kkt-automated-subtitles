@@ -191,7 +191,7 @@ text_profile_features_by_keys = {
     "font_data": ["style", "color", "size", "stroke_color", "stroke_size"],
     "outline_data_1": ["color", "radius", "blur_strength"],
     "outline_data_2": ["color", "radius", "blur_strength"],
-    "textbox_data": ["alignment", "anchor_point", "box_width", "push"],
+    "textbox_data": ["alignment", "anchor_point", "box_width", "grid4", "push"],
     "layer_data": ["background_path", "foreground_path", "blur_strength", "brightness"]
 }
 
