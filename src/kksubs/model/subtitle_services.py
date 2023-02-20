@@ -1,6 +1,7 @@
 import logging
 import os.path
 import textwrap
+from typing import Dict, List
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
@@ -261,7 +262,7 @@ class SubtitleService:
             image = apply_subtitle_to_image(image, subtitle)
         return image
 
-    def add_subtitles(self, filter_list=None):
+    def add_subtitles(self, filter_dict:Dict[str, List[int]]=None):
         # add subtitles to images.
 
         image_paths = self.subtitle_model.get_image_paths()
@@ -271,27 +272,40 @@ class SubtitleService:
 
         subtitle_groups = self.subtitle_model.get_subtitle_groups()
         # validation layer here.
-        for text_id in subtitle_groups.keys():
-            for image_id in subtitle_groups.get(text_id).keys():
-                validate_subtitle_group(subtitle_groups.get(text_id).get(image_id), image_id_set=image_id_set)
-        
-        if filter_list is not None:
-            image_paths = list(map(lambda i:image_paths[i], filter_list))
-            image_ids = list(map(os.path.basename, image_paths))
+        for text_path in subtitle_groups.keys():
+            for image_id in subtitle_groups.get(text_path).keys():
+                validate_subtitle_group(subtitle_groups.get(text_path).get(image_id), image_id_set=image_id_set)
 
-        n = len(image_paths)
+        for text_path in subtitle_groups.keys():
+            
+            text_id = os.path.splitext(os.path.basename(text_path))[0]
+            if filter_dict is not None and text_id in filter_dict.keys() and filter_dict.get(text_id) is not None:
+                filter_list = filter_dict.get(text_id)
+                filtered_image_paths = []
+                for index in filter_list:
+                    if 0 <= index <= len(image_paths)-1:
+                        filtered_image_paths.append(image_paths[index])
+                    else:
+                        logger.warning(f"Index {index} is out of bounds for image list with {len(image_paths)} images, skipping.")
+                # filtered_image_paths = list(map(lambda i:image_paths[i]), filter_list)
+                filtered_image_ids = list(map(os.path.basename, filtered_image_paths))
+            else:
+                filtered_image_paths = image_paths
+                filtered_image_ids = image_ids
+            n = len(filtered_image_paths)
+            logger.info(f"Gathered {n} images to process: {filtered_image_ids}.")
 
-        for text_id in subtitle_groups.keys():
-            subtitle_group_by_text_id = subtitle_groups[text_id]
+            subtitle_group_by_text_id = subtitle_groups[text_path]
 
             output_directory_by_text_id = os.path.join(
-                self.subtitle_model.output_directory, os.path.splitext(os.path.basename(text_id))[0]
+                self.subtitle_model.output_directory, os.path.splitext(os.path.basename(text_path))[0]
             )
             if not os.path.exists(output_directory_by_text_id):
+                logger.info(f"Created output directory {output_directory_by_text_id}")
                 os.makedirs(output_directory_by_text_id)
 
-            for i, image_path in enumerate(image_paths):
-                image_id = image_ids[i]
+            for i, image_path in enumerate(filtered_image_paths):
+                image_id = filtered_image_ids[i]
                 output_image_path = os.path.join(output_directory_by_text_id, image_id)
                 if image_id in subtitle_group_by_text_id.keys():
                     subtitle_group = subtitle_group_by_text_id[image_id]
@@ -299,8 +313,8 @@ class SubtitleService:
                     processed_image.save(output_image_path)
                 else:
                     Image.open(image_path).save(output_image_path)
-                logger.info(f"Processed and saved image {i+1}/{n} ({image_id}) for text_id {os.path.splitext(os.path.basename(text_id))[0]}.")
+                logger.info(f"Processed and saved image {i+1}/{n} ({image_id}) for text_id {text_id}.")
+            logger.info(f"Finished processing {n} images for text ID {text_id}")
 
         pass
-
     pass

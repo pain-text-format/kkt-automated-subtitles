@@ -133,7 +133,7 @@ class SubtitleController:
         # Defaults to 1.png, 2.png, and so on...
         self.subtitle_service.rename_images(padding_length=padding_length, start_at=start_at)
 
-    def add_subtitles(self, filter_list=None):
-        self.subtitle_service.add_subtitles(filter_list=filter_list)
+    def add_subtitles(self, filter_dict=None):
+        self.subtitle_service.add_subtitles(filter_dict=filter_dict)
 
     pass
