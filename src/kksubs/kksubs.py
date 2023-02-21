@@ -218,6 +218,8 @@ class SubtitleController:
             if default_subtitle_profile_id is not None:
                 config_dict["default_subtitle_profile_id"] = default_subtitle_profile_id
 
+            self.load_configs_from_dict(configs_dict=config_dict)
+
             if make_config:
                 logger.info("Adding config file for future use:")
                 with open(os.path.join(directory, "config.yaml"), "w", encoding="utf-8") as writer:
