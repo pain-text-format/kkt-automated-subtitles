@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import List
 
 import yaml
 
@@ -221,6 +222,14 @@ class SubtitleController:
                 logger.info("Adding config file for future use:")
                 with open(os.path.join(directory, "config.yaml"), "w", encoding="utf-8") as writer:
                     yaml.dump(config_dict, writer, sort_keys=False)
+
+    def show_drafts(self) -> List[str]:
+        # show all drafts in the input text directory.
+        input_text_ids = [os.path.splitext(os.path.basename(path))[0] for path in self.subtitle_model.get_textpaths()]
+        return input_text_ids
+
+    def add_subtitles_by_text_id(self, text_id=None, filter_list=None):
+        self.add_subtitles(filter_dict={text_id: filter_list})
 
     def add_subtitles(self, filter_dict=None):
         self.subtitle_service.add_subtitles(filter_dict=filter_dict)
