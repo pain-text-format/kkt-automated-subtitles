@@ -61,6 +61,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfi
         textbox_data.anchor_point = textbox_data_dict.get("anchor_point")
         textbox_data.box_width = textbox_data_dict.get("box_width")
         textbox_data.push = textbox_data_dict.get("push")
+        textbox_data.grid4 = textbox_data_dict.get("grid4")
         textbox_data.correct_values()
         subtitle_profile.textbox_data = textbox_data
         pass
