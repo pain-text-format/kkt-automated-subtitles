@@ -287,7 +287,7 @@ class LayerData(BaseData):
                 raise TypeError(f"Blur strength {self.blur_strength} is of type {type(self.blur_strength)}, not int.")
             
         if self.brightness is not None:
-            if isinstance(self.brightness, int):
+            if isinstance(self.brightness, float) or isinstance(self.brightness, int):
                 pass
             elif isinstance(self.brightness, str):
                 self.brightness = int(self.brightness)
