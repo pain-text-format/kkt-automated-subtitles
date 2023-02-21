@@ -108,7 +108,6 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
         grid4_x, grid4_y = textbox_data.grid4
         tb_anchor_x = int(image_width//4*grid4_x)
         tb_anchor_y = int(image_height//4*grid4_y)
-        print(tb_anchor_x, tb_anchor_y)
         
         if textbox_data.anchor_point is not None: # if there is anchor point data, use it to fine-tune.
             x_adjust, y_adjust = textbox_data.anchor_point

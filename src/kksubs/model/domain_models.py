@@ -256,6 +256,7 @@ class TextboxData(BaseData):
         self.anchor_point = coalesce(self.anchor_point, profile_textbox_data.anchor_point, (0, 0))
         self.box_width = coalesce(self.box_width, profile_textbox_data.box_width, 100)
         self.push = coalesce(self.push, profile_textbox_data.push, "down")
+        self.grid4 = coalesce(self.grid4, profile_textbox_data.grid4, None)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
