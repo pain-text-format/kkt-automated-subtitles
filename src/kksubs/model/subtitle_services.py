@@ -239,31 +239,11 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
 
     return image
 
+
+
 class SubtitleService:
     def __init__(self, subtitle_model:SubtitleDataAccessService=None):
         self.subtitle_model = subtitle_model
-
-    def rename_images(self, padding_length=None, start_at=None):
-        # Perform image renaming so it is structured and in alphabetical order.
-
-        image_paths = self.subtitle_model.get_image_paths()
-        image_paths.sort()
-        n = len(image_paths)
-
-        if padding_length is None:
-            padding_length = len(str(n))
-        if start_at is None:
-            start_at = 0
-
-        for i, image_path in enumerate(image_paths):
-            directory = self.subtitle_model.input_image_directory
-            extension = os.path.splitext(image_path)[1]
-            image_index = str(i+start_at).rjust(padding_length, "0")
-            new_basename = f"{image_index}{extension}"
-            new_image_path = os.path.join(directory, new_basename)
-            os.rename(image_path, new_image_path)
-
-        logger.info(f"Renamed {n} images in directory {self.subtitle_model.input_image_directory}.")
 
     def apply_subtitle_group(self, subtitle_group:SubtitleGroup) -> Image.Image:
         image_id = subtitle_group.image_id

@@ -157,10 +157,17 @@ class SubtitleController:
         self.subtitle_model.generate_input_subtitle_template(filename, existing_subtitle_file=existing_filename)
         pass
 
-    def rename_images(self, padding_length:int=None, start_at:int=None):
+    def rename_images(self, padding_length:int=None, start_at:int=None, prefix:str=None, suffix:str=None):
         # Perform image refactoring, such as renaming image names, in the input image directory.
         # Defaults to 1.png, 2.png, and so on...
-        self.subtitle_service.rename_images(padding_length=padding_length, start_at=start_at)
+        # also renames/update images in the drafts.
+        # a suffix helps to avoid naming conflicts.
+        if prefix is None:
+            prefix = ""
+        if suffix is None:
+            suffix = ""
+
+        self.subtitle_model.rename_images(padding_length=padding_length, start_at=start_at, prefix=prefix, suffix=suffix)
 
     def load_project(self, directory:str=None, default_subtitle_profile_id=None, make_config=None):
         if make_config is None:
@@ -227,7 +234,7 @@ class SubtitleController:
 
     def show_drafts(self) -> List[str]:
         # show all drafts in the input text directory.
-        input_text_ids = [os.path.splitext(os.path.basename(path))[0] for path in self.subtitle_model.get_textpaths()]
+        input_text_ids = [os.path.basename(path) for path in self.subtitle_model.get_textpaths()]
         return input_text_ids
 
     def add_subtitles_by_text_id(self, text_id=None, filter_list=None):
