@@ -290,7 +290,7 @@ class LayerData(BaseData):
             if isinstance(self.brightness, float) or isinstance(self.brightness, int):
                 pass
             elif isinstance(self.brightness, str):
-                self.brightness = int(self.brightness)
+                self.brightness = float(self.brightness)
             else:
                 raise TypeError(f"Brightness {self.brightness} is of type {type(self.brightness)}, not int")
             
