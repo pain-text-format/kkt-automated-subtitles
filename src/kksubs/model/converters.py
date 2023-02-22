@@ -2,6 +2,7 @@ import json
 import os
 from typing import Dict, Optional
 import logging
+import re
 
 import yaml
 
@@ -409,6 +410,12 @@ def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[st
     # validate_subtitle_groups(result)
     return result
 
+def _get_parent_profile_id(child_profile_id) -> Optional[str]:
+    # returns parent profile ID or None.
+    match = re.search(r'\((.*?)\)', child_profile_id)
+    if match:
+        return match.group(1)
+    return None
 
 def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
     # deserialize a list of subtitle profile paths.
@@ -419,5 +426,22 @@ def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
     if extension in {".yml", ".yaml"}:
         with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
             subtitle_profile_list_dict = yaml.safe_load(reader)
-    profile_dict_list = [_get_subtitle_profile_from_dict(subtitle_profile_json) for subtitle_profile_json in subtitle_profile_list_dict]
-    return {subtitle_profile.subtitle_profile_id:subtitle_profile for subtitle_profile in profile_dict_list}
+
+    subtitle_profiles = dict()
+    for subtitle_profile_json in subtitle_profile_list_dict:
+        subtitle_profile = _get_subtitle_profile_from_dict(subtitle_profile_json)
+        
+        # check if the profile ID represents that of a child.
+        # if the profile represents a child, then it should inherit from the parent.
+        subtitle_profile_id = subtitle_profile.subtitle_profile_id
+        parent_profile_id = _get_parent_profile_id(subtitle_profile_id)
+        if parent_profile_id:
+            if parent_profile_id not in subtitle_profiles.keys():
+                raise KeyError(f"Subtitle profile with ID {parent_profile_id} does not exist as parent for child {subtitle_profile_id}.")
+            parent_subtitle_profile = subtitle_profiles.get(parent_profile_id)
+            subtitle_profile.add_default(parent_subtitle_profile)
+            subtitle_profile.subtitle_profile_id = subtitle_profile_id.split("(")[0]
+
+        subtitle_profiles[subtitle_profile.subtitle_profile_id] = subtitle_profile
+    
+    return subtitle_profiles
