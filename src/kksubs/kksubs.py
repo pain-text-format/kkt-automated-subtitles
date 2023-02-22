@@ -231,7 +231,12 @@ class SubtitleController:
         return input_text_ids
 
     def add_subtitles_by_text_id(self, text_id=None, filter_list=None):
-        self.add_subtitles(filter_dict={text_id: filter_list})
+        if text_id is not None:
+            if filter_list is None:
+                filter_list = "all"
+            self.add_subtitles(filter_dict={text_id: filter_list})
+        else:
+            self.add_subtitles()
 
     def add_subtitles(self, filter_dict=None):
         self.subtitle_service.add_subtitles(filter_dict=filter_dict)
