@@ -434,16 +434,7 @@ def _get_parent_profile_id_list(child_profile_id) -> List[str]:
         return match.group(1).split(",")
     return []
 
-def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, MainSubtitleProfile]:
-    # deserialize a list of subtitle profile paths.
-    extension = os.path.splitext(subtitle_profile_path)[1]
-    if extension == ".json":
-        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
-            subtitle_profile_list_dict = json.load(reader)
-    if extension in {".yml", ".yaml"}:
-        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
-            subtitle_profile_list_dict = yaml.safe_load(reader)
-
+def get_subtitle_profiles_from_list(subtitle_profile_list_dict:List) -> dict:
     subtitle_profiles = dict()
     for subtitle_profile_json in subtitle_profile_list_dict:
         subtitle_profile = _get_subtitle_profile_from_dict(subtitle_profile_json)
@@ -465,3 +456,14 @@ def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, MainSubtitleProfil
         subtitle_profiles[subtitle_profile.subtitle_profile_id] = subtitle_profile
     
     return subtitle_profiles
+
+def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, MainSubtitleProfile]:
+    # deserialize a list of subtitle profile paths.
+    extension = os.path.splitext(subtitle_profile_path)[1]
+    if extension == ".json":
+        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
+            subtitle_profile_list_dict = json.load(reader)
+    if extension in {".yml", ".yaml"}:
+        with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
+            subtitle_profile_list_dict = yaml.safe_load(reader)
+    return get_subtitle_profiles_from_list(subtitle_profile_list_dict)
