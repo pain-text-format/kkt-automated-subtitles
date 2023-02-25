@@ -341,10 +341,18 @@ class AssetData(BaseData):
 
 class SubtitleProfile(BaseData):
 
-    def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:Optional[OutlineData]=None,
-                 textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, asset_data:Optional[AssetData]=None,
-                 default_text:Optional[str]=None,
-                 subtitle_profile_id:Optional[str]=None):
+    def __init__(
+            self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:Optional[OutlineData]=None,
+            textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, asset_data:Optional[AssetData]=None,
+            default_text:Optional[str]=None,
+
+            # if a subtitle profile contains an orbit.
+            orbits:Optional[List["SubtitleProfile"]]=None,
+            # orbiting data (orbit)
+            box_centrix:Optional[str]=None, # only for subtitles that orbit other subtitles.
+
+            subtitle_profile_id:Optional[str]=None):
+        
         self.font_data = font_data
         self.outline_data_1 = outline_data_1
         self.outline_data_2 = outline_data_2
@@ -353,6 +361,9 @@ class SubtitleProfile(BaseData):
         self.layer_data = layer_data
         self.asset_data = asset_data
         self.default_text = default_text # text prepended to the first line of a subtitle during text application.
+        
+        self.orbits = orbits
+        self.box_centrix = box_centrix # orbit coordinates of the form UDLRC (up down left right center), reserved for orbits.
         super().__init__()
 
     def correct_values(self):
@@ -440,7 +451,6 @@ class SubtitleProfile(BaseData):
         return self.__dict__ == other.__dict__
 
     pass
-
 
 class Subtitle:
 
