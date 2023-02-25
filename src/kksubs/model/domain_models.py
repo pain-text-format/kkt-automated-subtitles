@@ -29,6 +29,9 @@ def to_rgb_color(color):
         return (color[0], color[1], color[2])
     else:
         return ImageColor.getrgb(color)
+    
+def to_str_coords(value) -> Optional[tuple]:
+    return tuple(map(str, value[1:-1].split(",")))
 
 def to_xy_coords(value) -> Optional[tuple]:
     if value is None or isinstance(value, tuple):
@@ -349,7 +352,7 @@ class SubtitleProfile(BaseData):
             # if a subtitle profile contains an orbit.
             orbits:Optional[List["SubtitleProfile"]]=None,
             # orbiting data (orbit)
-            box_centrix:Optional[str]=None, # only for subtitles that orbit other subtitles.
+            centrix:Optional[str]=None, # coordinates. only for subtitles that orbit other subtitles.
 
             subtitle_profile_id:Optional[str]=None):
         
@@ -363,7 +366,8 @@ class SubtitleProfile(BaseData):
         self.default_text = default_text # text prepended to the first line of a subtitle during text application.
         
         self.orbits = orbits
-        self.box_centrix = box_centrix # orbit coordinates of the form UDLRC (up down left right center), reserved for orbits.
+
+        self.centrix = centrix # orbit coordinates of the form UDLRC (up down left right center), reserved for orbits.
         super().__init__()
 
     def correct_values(self):
@@ -379,6 +383,8 @@ class SubtitleProfile(BaseData):
             self.layer_data.correct_values()
         if self.asset_data is not None:
             self.asset_data.correct_values()
+        if self.centrix is not None:
+            self.centrix = to_str_coords(self.centrix)
         pass
 
     @classmethod

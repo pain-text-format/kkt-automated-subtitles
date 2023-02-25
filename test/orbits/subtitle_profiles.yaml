@@ -1,0 +1,10 @@
+- subtitle_profile_id: base
+  font_data:
+    size: 123
+
+- subtitle_profile_id: default
+  orbits:
+  - subtitle_profile_id: orbit(base)
+    centrix: [l, u]
+    font_data:
+      color: red

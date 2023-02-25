@@ -13,7 +13,10 @@ logger = logging.getLogger(__name__)
 from kksubs.model.domain_models import AssetData, LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
-def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfile:
+def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict, subtitle_profiles:Dict[str, SubtitleProfile]=None, is_orbit=None) -> SubtitleProfile:
+    if is_orbit is None:
+        is_orbit = False
+    
     keys = subtitle_profile_dict.keys()
     subtitle_profile = SubtitleProfile()
 
@@ -99,6 +102,30 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfi
     if subtitle_id_key in keys:
         subtitle_profile.subtitle_profile_id = subtitle_profile_dict.get(subtitle_id_key)
         pass
+
+    # check if the profile ID represents that of a child.
+    # if the profile represents a child, then it should inherit from the parent.
+    subtitle_profile_id = subtitle_profile.subtitle_profile_id
+    parent_profile_id_list = _get_parent_profile_id_list(subtitle_profile_id)
+
+    for parent_profile_id in parent_profile_id_list:
+        parent_profile_id = parent_profile_id.strip()
+        if parent_profile_id:
+            if parent_profile_id not in subtitle_profiles.keys():
+                raise KeyError(f"Subtitle profile with ID {parent_profile_id} does not exist as parent for child {subtitle_profile_id}.")
+            parent_subtitle_profile = subtitle_profiles.get(parent_profile_id)
+            subtitle_profile.add_default(parent_subtitle_profile)
+            subtitle_profile.subtitle_profile_id = subtitle_profile_id.split("(")[0]
+
+    # check for orbits.
+    if not is_orbit:
+        orbits = subtitle_profile_dict.get("orbits")
+        if orbits is not None and len(orbits) > 0:
+            subtitle_profile.orbits = list()
+            for orbit in orbits:
+                orbit_subtitle_profile = _get_subtitle_profile_from_dict(orbit, subtitle_profiles=subtitle_profiles, is_orbit=True)
+                subtitle_profile.orbits.append(orbit_subtitle_profile)
+
     return subtitle_profile
 
 
@@ -446,22 +473,7 @@ def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
 
     subtitle_profiles = dict()
     for subtitle_profile_json in subtitle_profile_list_dict:
-        subtitle_profile = _get_subtitle_profile_from_dict(subtitle_profile_json)
-        
-        # check if the profile ID represents that of a child.
-        # if the profile represents a child, then it should inherit from the parent.
-        subtitle_profile_id = subtitle_profile.subtitle_profile_id
-        parent_profile_id_list = _get_parent_profile_id_list(subtitle_profile_id)
-
-        for parent_profile_id in parent_profile_id_list:
-            parent_profile_id = parent_profile_id.strip()
-            if parent_profile_id:
-                if parent_profile_id not in subtitle_profiles.keys():
-                    raise KeyError(f"Subtitle profile with ID {parent_profile_id} does not exist as parent for child {subtitle_profile_id}.")
-                parent_subtitle_profile = subtitle_profiles.get(parent_profile_id)
-                subtitle_profile.add_default(parent_subtitle_profile)
-                subtitle_profile.subtitle_profile_id = subtitle_profile_id.split("(")[0]
-
+        subtitle_profile = _get_subtitle_profile_from_dict(subtitle_profile_json, subtitle_profiles=subtitle_profiles)
         subtitle_profiles[subtitle_profile.subtitle_profile_id] = subtitle_profile
     
     return subtitle_profiles
