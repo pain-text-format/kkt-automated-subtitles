@@ -1,4 +1,4 @@
-from kksubs.image.utils import circular_filter_rejection
+from kksubs.image.utils import circular_filter_rejection, in_cv2_environment
 import numpy as np
 import cv2
 from PIL import Image
@@ -45,9 +45,9 @@ def apply_motion_blur(image:Image.Image, kernel_size=None, angle=None) -> Image.
     if angle is None:
         angle = 0
     if angle%180==0:
-        return apply_horizontal_blur(image, kernel_size=kernel_size)
+        return in_cv2_environment(apply_horizontal_blur)(image, kernel_size=kernel_size)
     if angle%180==90:
-        return apply_vertical_blur(image, kernel_size=kernel_size)
+        return in_cv2_environment(apply_vertical_blur)(image, kernel_size=kernel_size)
 
     if kernel_size%2==0:
         # warn that kernel size is even, will be incremented so it is odd.

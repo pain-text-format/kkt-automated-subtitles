@@ -4,10 +4,10 @@ import textwrap
 from typing import Dict, List, Union
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-from kksubs.image.gaussian_blur import apply_gaussian_blur
-from kksubs.image.motion_blur import apply_motion_blur
+from kksubs.image.gaussian_blur import apply_gaussian_blur, cfr_apply_gaussian_blur
+from kksubs.image.motion_blur import apply_motion_blur, cfr_apply_motion_blur
 from kksubs.image.radial_blur import apply_radial_blur
-from kksubs.image.brightness import adjust_brightness
+from kksubs.image.brightness import adjust_brightness, cfr_adjust_brightness
 from kksubs.image.utils import apply_image
 
 from kksubs.model.data_access_services import SubtitleDataAccessService
@@ -241,7 +241,7 @@ def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.
 
     if brightness is not None:
         if is_rejection_filter:
-            image = adjust_brightness(
+            image = cfr_adjust_brightness(
                 image, brightness,
                 mask_radius=rejection_mask_radius,
                 mask_blur_strength=rejection_mask_blur_strength,
@@ -252,7 +252,7 @@ def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.
 
     elif is_gaussian_blur:
         if is_rejection_filter:
-            image = apply_gaussian_blur(
+            image = cfr_apply_gaussian_blur(
                 image, gaussian_blur,
                 mask_radius=rejection_mask_radius,
                 mask_blur_strength=rejection_mask_blur_strength,
@@ -263,7 +263,7 @@ def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.
 
     elif is_motion_blur:
         if is_rejection_filter:
-            image = apply_motion_blur(
+            image = cfr_apply_motion_blur(
                 image, motion_blur,
                 mask_radius=rejection_mask_radius,
                 mask_blur_strength=rejection_mask_blur_strength,
