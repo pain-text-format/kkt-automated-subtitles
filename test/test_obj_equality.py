@@ -1,6 +1,6 @@
 import unittest
 
-from kksubs.model.domain_models import FontData, Subtitle, SubtitleGroup, SubtitleProfile
+from kksubs.model.domain_models import FontData, Subtitle, SubtitleGroup, MainSubtitleProfile
 
 class TestObjEquality(unittest.TestCase):
 
@@ -13,9 +13,9 @@ class TestObjEquality(unittest.TestCase):
         font_data_3 = FontData(style="123", color=[1, 2, 3], size=1)
         assert(font_data_1!=font_data_3)
 
-        profile_1 = SubtitleProfile(font_data=font_data_1)
-        profile_2 = SubtitleProfile(font_data=font_data_2)
-        profile_3 = SubtitleProfile(font_data=font_data_3)
+        profile_1 = MainSubtitleProfile(font_data=font_data_1)
+        profile_2 = MainSubtitleProfile(font_data=font_data_2)
+        profile_3 = MainSubtitleProfile(font_data=font_data_3)
         assert(profile_1==profile_2)
         assert(profile_1!=profile_3)
 

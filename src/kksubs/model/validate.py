@@ -2,7 +2,7 @@ import logging
 
 import os
 from typing import List, Optional
-from kksubs.model.domain_models import AssetData, LayerData, FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
+from kksubs.model.domain_models import AssetData, LayerData, FontData, OutlineData, Subtitle, SubtitleGroup, MainSubtitleProfile, TextboxData
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def _validate_asset_data(asset_data:AssetData):
         if not isinstance(asset_data.rotate, int):
             raise TypeError(type(asset_data.rotate))
 
-def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
+def _validate_subtitle_profile(subtitle_profile:MainSubtitleProfile) -> None:
     if subtitle_profile.font_data is None:
         raise AttributeError
     else:

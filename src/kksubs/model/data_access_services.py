@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 
 import yaml
 
-from kksubs.model.domain_models import SubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
+from kksubs.model.domain_models import MainSubtitleProfile, SubtitleGroup, SupportedImageExtensions, \
     SupportedInputTextExtensions
 
 from kksubs.model.domain_models import get_default_font_style
@@ -179,7 +179,7 @@ class SubtitleDataAccessService:
         image_paths = list(map(lambda image_id:os.path.join(self.input_image_directory, image_id), image_ids))
         return image_paths
 
-    def get_subtitle_profiles(self) -> Dict[str, SubtitleProfile]:
+    def get_subtitle_profiles(self) -> Dict[str, MainSubtitleProfile]:
         if self.subtitle_profile_path is not None:
             if not os.path.exists(self.subtitle_profile_path):
                 raise FileExistsError(f"Subtitle profile path {self.subtitle_profile_path} does not exist.")

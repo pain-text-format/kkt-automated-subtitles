@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 # convert and delegate
 
-from kksubs.model.domain_models import AssetData, LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
+from kksubs.model.domain_models import AssetData, LayerData, MainSubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
-def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfile:
+def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> MainSubtitleProfile:
     keys = subtitle_profile_dict.keys()
-    subtitle_profile = SubtitleProfile()
+    subtitle_profile = MainSubtitleProfile()
 
     # keys
     font_data_key = "font_data"
@@ -102,23 +102,23 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfi
     return subtitle_profile
 
 
-def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:Optional[str]=None):
+def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:Optional[str]=None):
     # assume subtitle has local profile information.
     if subtitle.subtitle_profile is None:
-        subtitle.subtitle_profile = SubtitleProfile()
+        subtitle.subtitle_profile = MainSubtitleProfile()
 
     # check if default profile ID exists --> get default profile.
     # else, use global subtitle profile.
 
     if subtitle_profiles is not None and default_profile_id is not None:
         if default_profile_id in subtitle_profiles.keys():
-            default_profile = SubtitleProfile()
+            default_profile = MainSubtitleProfile()
             default_profile.add_default(subtitle_profiles[default_profile_id])
         else:
             logger.warning(f"The default subtitle with ID {default_profile_id} is not found: Using global default.")
-            default_profile = SubtitleProfile()
+            default_profile = MainSubtitleProfile()
     else:
-        default_profile = SubtitleProfile()
+        default_profile = MainSubtitleProfile()
     default_profile.add_default()
 
     # check if subtitle profile ID exists, if exist --> get from subtitle profiles.
@@ -128,14 +128,14 @@ def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[
             subtitle_profile = subtitle_profiles[subtitle.subtitle_profile_id]
         else:
             logger.warning(f"The subtitle profile with ID {subtitle.subtitle_profile_id} is not found: Using global default.")
-            subtitle_profile = SubtitleProfile()
+            subtitle_profile = MainSubtitleProfile()
     else:
-        subtitle_profile = SubtitleProfile()
+        subtitle_profile = MainSubtitleProfile()
     subtitle_profile.add_default(default_profile)
     subtitle.subtitle_profile.add_default(subtitle_profile)
 
 
-def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, SubtitleProfile]=None, default_profile_id:str=None) -> Subtitle:
+def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, MainSubtitleProfile]=None, default_profile_id:str=None) -> Subtitle:
     """
     Extract Subtitle data from a JSON dict representing a Subtitle.
     Profile priority: local profile data overrides local profile ID data overrides default profile data overrides global profile data.
@@ -152,7 +152,7 @@ def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, Subt
 
     if subtitle_profile_id_key in subtitle_json.keys():
         subtitle.subtitle_profile_id = subtitle_json[subtitle_profile_id_key]
-    subtitle.subtitle_profile = SubtitleProfile()
+    subtitle.subtitle_profile = MainSubtitleProfile()
 
 
     if subtitle_profile_key in subtitle_json.keys():
@@ -165,7 +165,7 @@ def _get_subtitle_from_dict(subtitle_json:Dict, subtitle_profiles:Dict[str, Subt
 
     return subtitle
 
-def _get_subtitle_groups_from_dict(subtitle_groups_list:Dict, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def _get_subtitle_groups_from_dict(subtitle_groups_list:Dict, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # keys
     image_id_key = "image_id"
     subtitle_list_key = "subtitle_list"
@@ -195,12 +195,12 @@ def _get_subtitle_groups_from_dict(subtitle_groups_list:Dict, subtitle_profiles:
 
     return subtitle_groups_by_path
 
-def _get_subtitle_groups_from_json(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def _get_subtitle_groups_from_json(textpath, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     with open(textpath, "r", encoding="utf-8") as reader:
         subtitle_groups_json = json.load(reader)
     return _get_subtitle_groups_from_dict(subtitle_groups_json, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
 
-def _get_subtitle_groups_from_yaml(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def _get_subtitle_groups_from_yaml(textpath, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     with open(textpath, "r", encoding="utf-8") as reader:
         subtitle_groups_json = yaml.safe_load(reader)
     return _get_subtitle_groups_from_dict(subtitle_groups_json, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
@@ -248,7 +248,7 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         return subtitle
 
     if subtitle.subtitle_profile is None:
-        subtitle.subtitle_profile = SubtitleProfile()
+        subtitle.subtitle_profile = MainSubtitleProfile()
     if data_type == "subtitle_profile_id":
         subtitle.subtitle_profile_id = value
         return subtitle
@@ -291,7 +291,7 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
         return subtitle
     raise
 
-def get_profile_alias(line:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None):
+def get_profile_alias(line:str, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None):
     if subtitle_profiles is None:
         return None
     for profile_id in subtitle_profiles.keys():
@@ -299,7 +299,7 @@ def get_profile_alias(line:str, subtitle_profiles:Optional[Dict[str, SubtitlePro
             return profile_id
     return None
 
-def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # to prevent repetition and overriding existing subtitles, send the user warnings when there are dupe image IDs.
     image_id_to_line_number = dict()
     
@@ -311,7 +311,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
     if subtitle_profiles is not None and default_profile_id in subtitle_profiles.keys():
         default_profile = subtitle_profiles[default_profile_id]
     else:
-        default_profile = SubtitleProfile()
+        default_profile = MainSubtitleProfile()
     default_profile.add_default()
 
     is_profile_environment = False
@@ -381,7 +381,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
                 empty_strings = []
-                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+                subtitle = Subtitle(content=[], subtitle_profile=MainSubtitleProfile())
 
             data_type, feature, value = _get_profile_data_type_feature_and_value(lines[i+1])
             if is_content_environment and i+1<len(lines) and data_type is not None:
@@ -393,7 +393,7 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 subtitle.subtitle_profile.add_default()
                 subtitle_group.subtitle_list.append(subtitle)
                 empty_strings = []
-                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+                subtitle = Subtitle(content=[], subtitle_profile=MainSubtitleProfile())
 
             # subtitle group
             elif i+1<len(lines) and lines[i+1].lower().startswith("image_id:") and subtitle_group.image_id is not None:
@@ -403,20 +403,20 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
                 empty_strings = []
                 subtitle_groups_by_path[subtitle_group.image_id] = subtitle_group
                 subtitle_group = SubtitleGroup(subtitle_list=[])
-                subtitle = Subtitle(content=[], subtitle_profile=SubtitleProfile())
+                subtitle = Subtitle(content=[], subtitle_profile=MainSubtitleProfile())
 
         pass
 
     return subtitle_groups_by_path
 
-def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def _get_subtitle_groups_from_text(textpath, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # limited functionality for text files. possibly more buggy.
     with open(textpath, "r", encoding="utf-8") as reader:
         textstring = reader.read()
     return _get_subtitle_groups_from_textstring(textstring, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
 
 
-def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
+def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[str, MainSubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     extension = os.path.splitext(textpath)[1]
     if extension == ".json":
         result = _get_subtitle_groups_from_json(textpath, subtitle_profiles=subtitle_profiles, default_profile_id=default_profile_id)
@@ -434,7 +434,7 @@ def _get_parent_profile_id_list(child_profile_id) -> List[str]:
         return match.group(1).split(",")
     return []
 
-def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
+def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, MainSubtitleProfile]:
     # deserialize a list of subtitle profile paths.
     extension = os.path.splitext(subtitle_profile_path)[1]
     if extension == ".json":
