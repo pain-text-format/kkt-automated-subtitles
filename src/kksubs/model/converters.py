@@ -1,7 +1,8 @@
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 import logging
+import re
 
 import yaml
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # convert and delegate
 
-from kksubs.model.domain_models import LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
+from kksubs.model.domain_models import AssetData, LayerData, SubtitleProfile, FontData, OutlineData, TextboxData, Subtitle, SubtitleGroup
 
 
 def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfile:
@@ -23,6 +24,7 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfi
     textbox_data_key = "textbox_data"
     subtitle_id_key = "subtitle_profile_id"
     layer_data_key = "layer_data"
+    asset_data_key = "asset_data"
     default_text_key = "default_text"
 
     if font_data_key in keys:
@@ -61,19 +63,36 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict) -> SubtitleProfi
         textbox_data.anchor_point = textbox_data_dict.get("anchor_point")
         textbox_data.box_width = textbox_data_dict.get("box_width")
         textbox_data.push = textbox_data_dict.get("push")
+        textbox_data.grid4 = textbox_data_dict.get("grid4")
+        textbox_data.rotate = textbox_data_dict.get("rotate")
+        textbox_data.dynamic_rotate = textbox_data_dict.get("dynamic_rotate")
         textbox_data.correct_values()
         subtitle_profile.textbox_data = textbox_data
         pass
     if layer_data_key in keys:
         layer_data = LayerData()
-        ldd:Dict = subtitle_profile_dict[layer_data_key]
-        layer_data.background_path = ldd.get("background_path")
-        layer_data.foreground_path = ldd.get("foreground_path")
-        layer_data.blur_strength = ldd.get("blur_strength")
-        layer_data.brightness = ldd.get("brightness")
+        bdd = subtitle_profile_dict[layer_data_key]
+        layer_data.brightness = bdd.get("brightness")
+        layer_data.gaussian_blur = bdd.get("gaussian_blur")
+        layer_data.motion_blur = bdd.get("motion_blur")
+        layer_data.motion_rotate = bdd.get("motion_rotate")
+        layer_data.radial_blur = bdd.get("radial_blur")
+        layer_data.radial_coords = bdd.get("radial_coords")
+        layer_data.f_blur = bdd.get("f_blur")
+        layer_data.f_coords = bdd.get("f_coords")
+        layer_data.f_radius = bdd.get("f_radius")
         layer_data.correct_values()
         subtitle_profile.layer_data = layer_data
         pass
+    if asset_data_key in keys:
+        asset_data = AssetData()
+        asset_data_dict:Dict = subtitle_profile_dict[asset_data_key]
+        asset_data.path = asset_data_dict.get("path")
+        asset_data.coords = asset_data_dict.get("coords")
+        asset_data.scale = asset_data_dict.get("scale")
+        asset_data.rotate = asset_data_dict.get("rotate")
+        subtitle_profile.asset_data = asset_data
+
     if default_text_key in keys:
         subtitle_profile.default_text = subtitle_profile_dict.get(default_text_key)
         pass
@@ -191,45 +210,39 @@ text_profile_features_by_keys = {
     "font_data": ["style", "color", "size", "stroke_color", "stroke_size"],
     "outline_data_1": ["color", "radius", "blur_strength"],
     "outline_data_2": ["color", "radius", "blur_strength"],
-    "textbox_data": ["alignment", "anchor_point", "box_width", "grid4", "push"],
-    "layer_data": ["background_path", "foreground_path", "blur_strength", "brightness"]
+    "textbox_data": ["alignment", "anchor_point", "box_width", "grid4", "push", "rotate", "dynamic_rotate"],
+    "layer_data": [
+        "brightness", 
+        "gaussian_blur", 
+        "motion_blur", "motion_rotate", 
+        "radial_blur", "radial_coords",
+        "f_blur", "f_radius", "f_coords",
+    ],
+    "asset_data": ["path", "coords", "scale", "rotate"]
 }
 
 
 def _get_profile_data_type_feature_and_value(line:str):
+    # examples:
+    # font_data.style: abc --> font_data, style, abc
+    # outline_data_1.color: red --> outline_data_1, color, red
+
     if line.startswith("subtitle_profile_id:"):
         return "subtitle_profile_id", "subtitle_profile_id", line.split(":", 1)[1].lstrip()
 
     for data_type in text_profile_features_by_keys.keys():
         for feature in text_profile_features_by_keys[data_type]:
-            formatted_feature = f"{data_type}.{feature}:"
+            formatted_feature = f"{data_type}.{feature}"
             if line.lower().startswith(formatted_feature):
                 value = line.split(":", 1)[1].lstrip()
                 return data_type, feature, value
+
     return None, None, None
 
 
 def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
     # extracts profile-related data from a line of text, and adds it to the subtitle appropriately.
     # first check if it is a profile ID field.
-
-    # font (represents FontData)
-    # font_data.style
-    # font_data.color
-    # font_data.size
-    # font_data.stroke_color
-    # font_data.stroke_size
-
-    # outline_data_n (represents OutlineData)
-    # outline_data_n.color
-    # outline_data_n.radius
-    # outline_data_n.blur_strength
-
-    # textbox_data (represents TextboxData)
-    # textbox_data.alignment
-    # textbox_data.anchor_point
-    # textbox_data.box_width
-    # textbox_data.push
     data_type, attribute, value = _get_profile_data_type_feature_and_value(line)
     if attribute is None:
         return subtitle
@@ -269,6 +282,12 @@ def _add_text_data_to_subtitle(subtitle: Subtitle, line:str) -> Subtitle:
             subtitle.subtitle_profile.layer_data = LayerData()
         setattr(subtitle.subtitle_profile.layer_data, attribute, value)
         subtitle.subtitle_profile.layer_data.correct_values()
+        return subtitle
+    elif data_type == "asset_data":
+        if subtitle.subtitle_profile.asset_data is None:
+            subtitle.subtitle_profile.asset_data = AssetData()
+        setattr(subtitle.subtitle_profile.asset_data, attribute, value)
+        subtitle.subtitle_profile.asset_data.correct_values()
         return subtitle
     raise
 
@@ -408,6 +427,12 @@ def get_subtitle_groups_by_textpath(textpath, subtitle_profiles:Optional[Dict[st
     # validate_subtitle_groups(result)
     return result
 
+def _get_parent_profile_id_list(child_profile_id) -> List[str]:
+    # returns parent profile ID or None.
+    match = re.search(r'\((.*?)\)', child_profile_id)
+    if match:
+        return match.group(1).split(",")
+    return []
 
 def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
     # deserialize a list of subtitle profile paths.
@@ -418,5 +443,25 @@ def get_subtitle_profiles(subtitle_profile_path) -> Dict[str, SubtitleProfile]:
     if extension in {".yml", ".yaml"}:
         with open(subtitle_profile_path, "r", encoding="utf-8") as reader:
             subtitle_profile_list_dict = yaml.safe_load(reader)
-    profile_dict_list = [_get_subtitle_profile_from_dict(subtitle_profile_json) for subtitle_profile_json in subtitle_profile_list_dict]
-    return {subtitle_profile.subtitle_profile_id:subtitle_profile for subtitle_profile in profile_dict_list}
+
+    subtitle_profiles = dict()
+    for subtitle_profile_json in subtitle_profile_list_dict:
+        subtitle_profile = _get_subtitle_profile_from_dict(subtitle_profile_json)
+        
+        # check if the profile ID represents that of a child.
+        # if the profile represents a child, then it should inherit from the parent.
+        subtitle_profile_id = subtitle_profile.subtitle_profile_id
+        parent_profile_id_list = _get_parent_profile_id_list(subtitle_profile_id)
+
+        for parent_profile_id in parent_profile_id_list:
+            parent_profile_id = parent_profile_id.strip()
+            if parent_profile_id:
+                if parent_profile_id not in subtitle_profiles.keys():
+                    raise KeyError(f"Subtitle profile with ID {parent_profile_id} does not exist as parent for child {subtitle_profile_id}.")
+                parent_subtitle_profile = subtitle_profiles.get(parent_profile_id)
+                subtitle_profile.add_default(parent_subtitle_profile)
+                subtitle_profile.subtitle_profile_id = subtitle_profile_id.split("(")[0]
+
+        subtitle_profiles[subtitle_profile.subtitle_profile_id] = subtitle_profile
+    
+    return subtitle_profiles

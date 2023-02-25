@@ -2,9 +2,17 @@ import logging
 
 import os
 from typing import List, Optional
-from kksubs.model.domain_models import FontData, LayerData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
+from kksubs.model.domain_models import AssetData, LayerData, FontData, OutlineData, Subtitle, SubtitleGroup, SubtitleProfile, TextboxData
 
 logger = logging.getLogger(__name__)
+
+def _validate_coordinates(coords):
+    # check if coords is a pair of ints.
+    if not isinstance(coords, tuple):
+        raise TypeError(type(coords))
+    if not (isinstance(coords[0], int) and isinstance(coords[1], int)):
+        raise TypeError(f"Coords are not pair of ints: {(coords[0], type(coords[0]))}, {(coords[1], type(coords[1]))}")
+
 
 def _validate_font_data(font_data:FontData):
     if font_data is None:
@@ -34,47 +42,63 @@ def _validate_textbox_data(textbox_data:TextboxData):
             raise TypeError(f"Textbox data does not contain ints: {(textbox_data.grid4[0], type(textbox_data.grid4[0]))}, {(textbox_data.grid4[1], type(textbox_data.grid4[1]))}")
         if not ((0 <= textbox_data.grid4[0] <= 4) and (0 <= textbox_data.grid4[0] <= 4)):
             raise ValueError(f"Values not between 0 and 4: {textbox_data.grid4}")
+    if textbox_data.rotate is not None:
+        if not isinstance(textbox_data.rotate, int):
+            raise TypeError(type(textbox_data.rotate))
+    if textbox_data.dynamic_rotate is not None:
+        logger.warning("Dynamic rotation feature is not stable, use with caution.")
+        if not isinstance(textbox_data.dynamic_rotate, int):
+            raise TypeError(type(textbox_data.dynamic_rotate))
 
 def _validate_layer_data(layer_data:LayerData):
-    if layer_data.background_path is not None:
-        if not os.path.exists(layer_data.background_path):
-            raise FileNotFoundError(layer_data.background_path)
-    if layer_data.foreground_path is not None:
-        if not os.path.exists(layer_data.foreground_path):
-            raise FileNotFoundError(layer_data.foreground_path)
-    if layer_data.blur_strength is not None:
-        if not isinstance(layer_data.blur_strength, int):
-            raise TypeError(type(layer_data.blur_strength))
-    if layer_data.brightness is not None:
-        if not isinstance(layer_data.brightness, float) and not isinstance(layer_data.brightness, int):
-            raise TypeError(type(layer_data.brightness))
+    if layer_data.gaussian_blur is not None:
+        if not isinstance(layer_data.gaussian_blur, int):
+            raise TypeError(layer_data.gaussian_blur, type(layer_data.gaussian_blur))
+    pass
+
+def _validate_asset_data(asset_data:AssetData):
+    if asset_data.path is not None:
+        if not os.path.exists(asset_data.path):
+            raise FileNotFoundError(asset_data.path)
+    if asset_data.coords is not None:
+        _validate_coordinates(asset_data.coords)
+    if asset_data.scale is not None:
+        if not isinstance(asset_data.scale, (float, int)):
+            raise TypeError(type(asset_data.scale))
+    if asset_data.rotate is not None:
+        if not isinstance(asset_data.rotate, int):
+            raise TypeError(type(asset_data.rotate))
 
 def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
     if subtitle_profile.font_data is None:
         raise AttributeError
     else:
+        subtitle_profile.font_data.add_default(FontData.get_default())
         _validate_font_data(subtitle_profile.font_data)
         
     if subtitle_profile.default_text is not None:
         if not isinstance(subtitle_profile.default_text, str):
             raise TypeError(type(subtitle_profile.default_text))
 
-    if subtitle_profile.outline_data_1 is None:
-        pass
-    else:
+    if subtitle_profile.outline_data_1 is not None:
+        subtitle_profile.outline_data_1.add_default(OutlineData.get_default())
         _validate_outline_data(subtitle_profile.outline_data_1)
-    if subtitle_profile.outline_data_2 is None:
-        pass
-    else:
+
+    if subtitle_profile.outline_data_2 is not None:
+        subtitle_profile.outline_data_2.add_default(OutlineData.get_default())
         _validate_outline_data(subtitle_profile.outline_data_2)
+
     if subtitle_profile.textbox_data is None:
         raise NotImplementedError("Subtitle profile has no textbox data.")
     else:
+        subtitle_profile.textbox_data.add_default(TextboxData.get_default())
         _validate_textbox_data(subtitle_profile.textbox_data)
-    if subtitle_profile.layer_data is None:
-        pass
-    else:
+
+    if subtitle_profile.layer_data is not None:
         _validate_layer_data(subtitle_profile.layer_data)
+
+    if subtitle_profile.asset_data is not None:
+        _validate_asset_data(subtitle_profile.asset_data)
     pass
 
 def _validate_subtitle_list(subtitle_list:List[Subtitle]) -> None:

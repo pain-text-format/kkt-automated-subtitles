@@ -1,0 +1,8 @@
+- subtitle_profile_id: parent
+  font_data:
+    color: red
+    size: 50
+
+- subtitle_profile_id: child(parent)
+  font_data:
+    color: blue
