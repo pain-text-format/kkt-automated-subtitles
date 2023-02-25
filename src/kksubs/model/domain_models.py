@@ -339,7 +339,8 @@ class AssetData(BaseData):
     def get_default(cls):
         return AssetData()
 
-class SubtitleProfileBase(BaseData):
+class SubtitleProfile(BaseData):
+
     def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:Optional[OutlineData]=None,
                  textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, asset_data:Optional[AssetData]=None,
                  default_text:Optional[str]=None,
@@ -371,15 +372,15 @@ class SubtitleProfileBase(BaseData):
 
     @classmethod
     def get_default(cls):
-        subtitle_profile = MainSubtitleProfile()
+        subtitle_profile = SubtitleProfile()
         subtitle_profile.add_default()
         return subtitle_profile
 
-    def add_default(self, profile:"MainSubtitleProfile"=None):
+    def add_default(self, profile:"SubtitleProfile"=None):
 
         # pass global data to profile data.
         if profile is None:
-            profile = MainSubtitleProfile()
+            profile = SubtitleProfile()
 
         if profile.font_data is None:
             profile.font_data = FontData()
@@ -440,31 +441,11 @@ class SubtitleProfileBase(BaseData):
 
     pass
 
-class OrbitingSubtitleProfile(SubtitleProfileBase):
-    def __init__(
-            self, *args,
-            parent:SubtitleProfileBase=None,
-            box_coords=None,
-            **kwargs,
-    ):
-        self.parent = parent
-        self.box_coords = box_coords
-        super().__init__(*args, **kwargs)
-
-class MainSubtitleProfile(SubtitleProfileBase):
-    def __init__(
-            self, *args,
-            orbiting_subtitle_profile_ids:List[str] = None,
-            orbiting_subtitle_profiles:List[SubtitleProfileBase] = None, # list of possible assets that orbit the main subtitle.
-            **kwargs
-    ):
-        self.orbiting_subtitle_profiles = orbiting_subtitle_profiles
-        super().__init__(*args, **kwargs)
 
 class Subtitle:
 
     def __init__(
-            self, subtitle_profile_id: Optional[str] = None, subtitle_profile: Optional[MainSubtitleProfile] = None,
+            self, subtitle_profile_id: Optional[str] = None, subtitle_profile: Optional[SubtitleProfile] = None,
             content: List[str] = None
     ):
         """
