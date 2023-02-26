@@ -4,12 +4,20 @@ import textwrap
 from typing import Dict, List, Union
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from kksubs.image.gaussian_blur import apply_gaussian_blur, cfr_apply_gaussian_blur
+from kksubs.image.motion_blur import apply_motion_blur, cfr_apply_motion_blur
+from kksubs.image.radial_blur import apply_radial_blur
+from kksubs.image.brightness import adjust_brightness, cfr_adjust_brightness
+from kksubs.image.utils import apply_image
 
 from kksubs.model.data_access_services import SubtitleDataAccessService
-from kksubs.model.domain_models import Subtitle, SubtitleGroup
+from kksubs.model.domain_models import LayerData, Subtitle, SubtitleGroup, SubtitleProfile
 from kksubs.model.validate import validate_subtitle_group
+import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
 
 def _get_text_dimensions(text_string, font, default_text_width=None, default_text_height=None):
     if text_string == "":
@@ -21,53 +29,10 @@ def _get_text_dimensions(text_string, font, default_text_width=None, default_tex
 
     return text_width, text_height
 
-def apply_image(image:Image.Image, background_image) -> Image.Image:
-    image.paste(background_image, (0, 0), background_image)
-    return image
+def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> Image.Image:
+    if get_box is None:
+        get_box = False
 
-def adjust_brightness(image:Image.Image, brightness) -> Image.Image:
-    enhancer = ImageEnhance.Brightness(image)
-    adjusted_image = enhancer.enhance(brightness)
-    return adjusted_image
-
-def apply_gaussian_blur(image:Image.Image, blur_strength) -> Image.Image:
-    blurred_image = image.filter(ImageFilter.GaussianBlur(radius=blur_strength))
-    return blurred_image
-
-# TODO
-def apply_motion_blur(image:Image.Image, intensity, argument) -> Image.Image:
-    # apply motion blur with assigned intensity and radial argument (0-180 degrees ccw).
-    # radial argument can be either an int (degrees), or a string:
-    # h (horizontal), v (vertical), d (diagonal from top left), a (anti-diagonal from bottom left).
-    return image
-
-def circular_filter_rejection(fn):
-    # applies a mask that rejects a filter about a circle on the image. The rejection is smoothed on the boundary via gaussian filtering.
-
-    def filter_fn(image, *args, mask_radius:int=None, mask_blur_strength:int=None, mask_displacement:tuple=None, **kwargs):
-        if mask_radius is None:
-            mask_radius = 200
-        if mask_blur_strength is None:
-            mask_blur_strength = 200
-        if mask_displacement is None:
-            mask_displacement = (0, 0)
-        
-        dis_x, dis_y = mask_displacement # displacement from center.
-        image_width, image_height = image.size
-        x, y = image_width//2+dis_x, image_height//2+dis_y # new center of focus.
-        filtered_image = fn(image, *args, **kwargs)
-        mask_layer = Image.new("RGB", image.size, "white")
-        mask_draw = ImageDraw.Draw(mask_layer)
-        mask_draw.ellipse((x-mask_radius, y-mask_radius, x+mask_radius, y+mask_radius), fill="black")
-        mask_layer = mask_layer.convert("L").filter(ImageFilter.GaussianBlur(radius=mask_blur_strength))
-        image.paste(filtered_image, (0, 0), mask_layer)
-        return image
-    
-    return filter_fn
-
-focal_blur_image = circular_filter_rejection(apply_gaussian_blur)
-
-def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     # expand subtitle.
     subtitle_profile = subtitle.subtitle_profile
     content = subtitle.content
@@ -76,14 +41,6 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     outline_data_1 = subtitle_profile.outline_data_1
     outline_data_2 = subtitle_profile.outline_data_2
     textbox_data = subtitle_profile.textbox_data
-
-    # default text application.
-    default_text = subtitle_profile.default_text
-    if default_text is not None:
-        if content is None or len(content) == 0:
-            content = [default_text]
-        else:
-            content[0] = default_text + content[0]
 
     # extract image data
     image_width, image_height = image.size
@@ -103,7 +60,10 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     alignment = textbox_data.alignment
     box_width = textbox_data.box_width
     push = textbox_data.push
+    rotate = textbox_data.rotate
+    dynamic_rotate = textbox_data.dynamic_rotate
 
+    # TODO: move this out
     if textbox_data.grid4 is not None:
         grid4_x, grid4_y = textbox_data.grid4
         tb_anchor_x = int(image_width//4*grid4_x)
@@ -140,7 +100,34 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     num_lines = len(wrapped_text)
     sum_text_height = num_lines * default_text_height
 
-    # add text.
+    # gather rotation arguments. (for future advanced rotation)
+    left = image_width
+    right = 0
+    up = image_height
+    down = 0
+    for line in wrapped_text:
+        text_width = font.getlength(line)
+        if alignment == "left":
+            left = min(left, tb_anchor_x)
+            right = max(right, tb_anchor_x + text_width)
+        elif alignment == "center":
+            left = min(left, tb_anchor_x - text_width/2)
+            right = max(right, tb_anchor_x + text_width/2)
+        elif alignment == "right":
+            left = min(left, tb_anchor_x - text_width)
+            right = max(right, tb_anchor_x)
+    if push == "up":
+        up = min(up, tb_anchor_y)
+        down = max(down, tb_anchor_y + sum_text_height)
+    elif push == "down":
+        up = min(up, tb_anchor_y + sum_text_height)
+        down = max(down, tb_anchor_y)
+    elif push == "center":
+        up = min(up, tb_anchor_y + sum_text_height)
+        down = max(down, tb_anchor_y)
+        pass
+
+    # add text stage
     for i, line in enumerate(wrapped_text):
         text_width = font.getlength(line)
 
@@ -153,9 +140,11 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
         else:
             raise ValueError(f"Invalid alignment value {alignment}.")
         if push == "up":
-            y = tb_anchor_y + (- default_text_height*(num_lines-i))
+            y = tb_anchor_y - default_text_height*(num_lines-i)
         elif push == "down":
-            y = tb_anchor_y + (sum_text_height - default_text_height*(num_lines-i))
+            y = tb_anchor_y - default_text_height*(num_lines-i) + sum_text_height
+        elif push == "center":
+            y = tb_anchor_y - default_text_height*(num_lines-i) + sum_text_height//2
         else:
             raise ValueError(f"Invalid push value {push}.")
         line_pos = (x, y)
@@ -178,9 +167,32 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
             pass
         else:
             text_draw.text(line_pos, line, font=font, fill=font_color)
-        image.paste(text_layer, (0, 0), text_layer)
+        # image.paste(text_layer, (0, 0), text_layer)
+    print("updown:", up, down)
+    # layer rotation stage
+    if rotate is not None or dynamic_rotate is not None:
+        rotate_x = (right + left)/2
+        rotate_y = (up + down)/2
 
-    # apply paste
+        # check if
+        if rotate is None:
+            first_or_fourth_quadrant = rotate_x > image_width//2
+            first_or_second_quadrant = rotate_y < image_height*2//3
+            if (first_or_fourth_quadrant and first_or_second_quadrant):
+                rotate = -dynamic_rotate
+            elif (not first_or_fourth_quadrant and first_or_second_quadrant):
+                rotate = dynamic_rotate
+            if image_width*2//5 < rotate_x < image_width*3//5:
+                rotate = 0
+
+        if rotate:
+            text_layer = text_layer.rotate(rotate, center=(rotate_x, rotate_y))
+            if outline_1_layer is not None:
+                outline_1_layer = outline_1_layer.rotate(rotate, center=(rotate_x, rotate_y))
+            if outline_2_layer is not None:
+                outline_2_layer = outline_2_layer.rotate(rotate, center=(rotate_x, rotate_y))
+
+    # paste stage
     if outline_data_2 is not None:
         if outline_data_2.blur_strength is not None and outline_data_2.blur_strength:
             outline_2_over_base = image.copy()
@@ -203,39 +215,171 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
             image.paste(outline_1_layer, (0, 0), outline_1_layer)
 
     image.paste(text_layer, (0, 0), text_layer)
+
+    if not get_box:
+        return image
+    return image, {
+        "left": left,
+        "right": right,
+        "up": up,
+        "down": down,
+    }
+
+def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.Image:
+    
+    brightness = layer_data.brightness
+
+    gaussian_blur = layer_data.gaussian_blur
+    
+    motion_blur = layer_data.motion_blur
+    motion_rotate = layer_data.motion_rotate
+
+    radial_blur = layer_data.radial_blur
+    radial_coords = layer_data.radial_coords
+
+    rejection_mask_coords = layer_data.f_coords
+    rejection_mask_radius = layer_data.f_radius
+    rejection_mask_blur_strength = layer_data.f_blur
+
+    is_gaussian_blur = gaussian_blur is not None
+    is_motion_blur = motion_blur is not None or motion_rotate is not None
+    is_radial_blur = radial_blur is not None or radial_coords is not None
+    is_rejection_filter = rejection_mask_coords is not None or rejection_mask_radius is not None or rejection_mask_blur_strength is not None
+
+    if brightness is not None:
+        if is_rejection_filter:
+            image = cfr_adjust_brightness(
+                image, brightness,
+                mask_radius=rejection_mask_radius,
+                mask_blur_strength=rejection_mask_blur_strength,
+                mask_displacement=rejection_mask_coords
+            )
+        else:
+            image = adjust_brightness(image, brightness)
+
+    elif is_gaussian_blur:
+        if is_rejection_filter:
+            image = cfr_apply_gaussian_blur(
+                image, gaussian_blur,
+                mask_radius=rejection_mask_radius,
+                mask_blur_strength=rejection_mask_blur_strength,
+                mask_displacement=rejection_mask_coords
+            )
+        else:
+            image = apply_gaussian_blur(image, gaussian_blur)
+
+    elif is_motion_blur:
+        if is_rejection_filter:
+            image = cfr_apply_motion_blur(
+                image, motion_blur,
+                mask_radius=rejection_mask_radius,
+                mask_blur_strength=rejection_mask_blur_strength,
+                mask_displacement=rejection_mask_coords
+            )
+        else:
+            image = apply_motion_blur(image, motion_blur, angle=motion_rotate)
+
+    elif is_radial_blur:
+        image = apply_radial_blur(image, focal_point=radial_coords, kernel_size=radial_blur)
+    
     return image
 
-def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
+def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle, is_orbit=None, box_data=None) -> Image.Image:
+    if is_orbit is None:
+        is_orbit = False
+        
     # applies data from the subtitle to the image.
 
     # expand subtitle.
     subtitle_profile = subtitle.subtitle_profile
     content = subtitle.content
 
-    layer_data = subtitle_profile.layer_data
+    if is_orbit:
+        if box_data is None:
+            return image
+        
+        # update anchor point so it is at center of box.
+        left, right, up, down = box_data["left"], box_data["right"], box_data["up"], box_data["down"]
+        print(left, right, up, down)
+        center_x = (left + right)/2
+        center_y = (up + down)/2
+        anchor_point = subtitle_profile.textbox_data.anchor_point
+        centrix = subtitle_profile.centrix
+
+        if centrix is None:
+            centrix = ["c", "c"]
+            
+        def compute_centrix_x(s:str):
+            s = s.lower()
+            if s == "l":
+                return left
+            if s == "c":
+                return center_x
+            if s == "r":
+                return right
+            raise s
+
+        def compute_centrix_y(s:str):
+            s = s.lower()
+            if s == "u":
+                return up
+            if s == "d":
+                return down
+            if s == "c":
+                return center_y
+            raise s
+        centrix_x = int(np.average(list(map(compute_centrix_x, centrix[0])))) - image.size[0]//2
+        centrix_y = int(np.average(list(map(compute_centrix_y, centrix[1])))) - image.size[1]//2
+        anchor_point = (anchor_point[0]+centrix_x, anchor_point[1]+centrix_y)
+        subtitle_profile.textbox_data.anchor_point = anchor_point
+
+    asset_data = subtitle_profile.asset_data
 
     # add background image (if any)
+    layer_data = subtitle_profile.layer_data
     if layer_data is not None:
-        background_path = layer_data.background_path
-        image_blur_strength = layer_data.blur_strength
-        image_brightness = layer_data.brightness
-        if background_path is not None:
-            background_image = Image.open(background_path)
-            image = apply_image(image, background_image)
-        if image_blur_strength is not None:
-            image = apply_gaussian_blur(image, image_blur_strength)
-        if image_brightness is not None:
-            image = adjust_brightness(image, image_brightness)
+        image = apply_layer_data_to_image(image, layer_data)
 
-    if content is not None:
-        image = apply_text_to_image(image, subtitle)
+    if asset_data is not None and asset_data.path is not None:
+        path = asset_data.path
+        coords = asset_data.coords
+        scale = asset_data.scale
+        rotate = asset_data.rotate
+        
+        asset_image = Image.open(path)
+        apply_image(image, asset_image, displacement=coords, scale=scale, rotate=rotate)
 
-    # add foreground image (if any)
-    if layer_data is not None:
-        foreground_path = layer_data.foreground_path
-        if foreground_path is not None:
-            foreground_image = Image.open(foreground_path)
-            image = apply_image(image, foreground_image)
+    # default text application.
+    default_text = subtitle_profile.default_text
+    if default_text is not None:
+        if content is None or len(content) == 0:
+            content = [default_text]
+        else:
+            content[0] = default_text + content[0]
+        subtitle.content = content
+    if content is not None and len(content) > 0:
+        image, box_data = apply_text_to_image(image, subtitle, get_box=True)
+
+    # orbits will be applied under the subtitle.
+    # needs the textbox information.
+    # if textbox info is not present do not proceed with orbits.
+    orbits = subtitle.subtitle_profile.orbits
+    if orbits is not None and len(orbits) > 0:
+        # print(orbits)
+        for orbit_profile in orbits:
+            main_anchor_point = subtitle.subtitle_profile.textbox_data.anchor_point
+            orbit_anchor_point = orbit_profile.textbox_data.anchor_point
+            updated_anchor_point = (orbit_anchor_point[0], orbit_anchor_point[1])
+            # updated_anchor_point = (main_anchor_point[0]+orbit_anchor_point[0], main_anchor_point[1]+orbit_anchor_point[1])
+            orbit_profile.textbox_data.anchor_point = updated_anchor_point
+            image = apply_subtitle_to_image(
+                image,
+                Subtitle(
+                    subtitle_profile=orbit_profile
+                ),
+                is_orbit=True,
+                box_data=box_data
+            )
 
     return image
 
@@ -272,7 +416,7 @@ class SubtitleService:
 
         for text_path in subtitle_groups.keys():
             
-            text_id = os.path.splitext(os.path.basename(text_path))[0]
+            text_id = os.path.basename(text_path)
             if filter_dict is not None:
                 if text_id in filter_dict.keys():
                     if isinstance(filter_dict.get(text_id), list):
@@ -289,6 +433,7 @@ class SubtitleService:
                         filtered_image_paths = image_paths
                         filtered_image_ids = image_ids
                 else:
+                    logger.warning(f"Draft ID {text_id} is not in input text directory, skipping.")
                     continue
             else:
                 filtered_image_paths = image_paths
