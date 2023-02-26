@@ -168,7 +168,6 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> I
         else:
             text_draw.text(line_pos, line, font=font, fill=font_color)
         # image.paste(text_layer, (0, 0), text_layer)
-    print("updown:", up, down)
     # layer rotation stage
     if rotate is not None or dynamic_rotate is not None:
         rotate_x = (right + left)/2
@@ -382,6 +381,8 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle, is_orbit=None,
             )
 
     return image
+
+
 
 class SubtitleService:
     def __init__(self, subtitle_model:SubtitleDataAccessService=None):
