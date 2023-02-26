@@ -270,7 +270,7 @@ def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.
     elif is_motion_blur:
         if is_rejection_filter:
             image = cfr_apply_motion_blur(
-                image, motion_blur,
+                image, kernel_size=motion_blur, angle=motion_rotate,
                 mask_radius=rejection_mask_radius,
                 mask_blur_strength=rejection_mask_blur_strength,
                 mask_displacement=rejection_mask_coords
