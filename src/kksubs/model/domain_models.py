@@ -389,7 +389,10 @@ class SubtitleProfile(BaseData):
 
     @classmethod
     def get_default(cls):
-        subtitle_profile = SubtitleProfile()
+        subtitle_profile = SubtitleProfile(
+            font_data=FontData.get_default(),
+            textbox_data=TextboxData.get_default()
+        )
         subtitle_profile.add_default()
         return subtitle_profile
 
@@ -452,6 +455,8 @@ class SubtitleProfile(BaseData):
         self.asset_data.add_default(profile.asset_data)
 
         self.default_text = coalesce(self.default_text, profile.default_text)
+        self.orbits = coalesce(self.orbits, profile.orbits)
+        self.centrix = coalesce(self.centrix, profile.centrix)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

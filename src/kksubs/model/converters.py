@@ -125,6 +125,8 @@ def _get_subtitle_profile_from_dict(subtitle_profile_dict:Dict, subtitle_profile
             for orbit in orbits:
                 orbit_subtitle_profile = _get_subtitle_profile_from_dict(orbit, subtitle_profiles=subtitle_profiles, is_orbit=True)
                 subtitle_profile.orbits.append(orbit_subtitle_profile)
+    else: # if is orbit
+        subtitle_profile.centrix = subtitle_profile_dict.get("centrix")
 
     return subtitle_profile
 
@@ -159,6 +161,13 @@ def _inject_subtitle_profile_data(subtitle:Subtitle, subtitle_profiles:Optional[
     else:
         subtitle_profile = SubtitleProfile()
     subtitle_profile.add_default(default_profile)
+
+    # orbit data.
+    orbits = subtitle_profile.orbits
+    if orbits is not None and len(orbits) > 0:
+        for orbit in orbits:
+            orbit.add_default(default_profile)
+
     subtitle.subtitle_profile.add_default(subtitle_profile)
 
 
@@ -326,6 +335,14 @@ def get_profile_alias(line:str, subtitle_profiles:Optional[Dict[str, SubtitlePro
             return profile_id
     return None
 
+def get_default_subtitle_profile(subtitle_profiles:Dict[str, SubtitleProfile], default_profile_id:str=None):
+    if subtitle_profiles is not None and default_profile_id in subtitle_profiles.keys():
+        default_profile = subtitle_profiles[default_profile_id]
+    else:
+        default_profile = SubtitleProfile()
+    default_profile.add_default()
+    return default_profile
+
 def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optional[Dict[str, SubtitleProfile]]=None, default_profile_id:str=None) -> Dict[str, SubtitleGroup]:
     # to prevent repetition and overriding existing subtitles, send the user warnings when there are dupe image IDs.
     image_id_to_line_number = dict()
@@ -335,11 +352,8 @@ def _get_subtitle_groups_from_textstring(textstring:str, subtitle_profiles:Optio
 
     subtitle_group = SubtitleGroup(subtitle_list=[])
     subtitle = Subtitle(content=[])
-    if subtitle_profiles is not None and default_profile_id in subtitle_profiles.keys():
-        default_profile = subtitle_profiles[default_profile_id]
-    else:
-        default_profile = SubtitleProfile()
-    default_profile.add_default()
+    default_profile = get_default_subtitle_profile(subtitle_profiles, default_profile_id=default_profile_id)
+    default_profile.add_default(SubtitleProfile.get_default())
 
     is_profile_environment = False
     is_content_environment = False
