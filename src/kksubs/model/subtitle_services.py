@@ -123,8 +123,8 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> I
         up = min(up, tb_anchor_y + sum_text_height)
         down = max(down, tb_anchor_y)
     elif push == "center":
-        up = tb_anchor_y
-        down = tb_anchor_y
+        up = min(up, tb_anchor_y + sum_text_height/2)
+        down = max(down, tb_anchor_y - sum_text_height/2)
         pass
 
     # add text stage
@@ -168,7 +168,7 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> I
         else:
             text_draw.text(line_pos, line, font=font, fill=font_color)
         # image.paste(text_layer, (0, 0), text_layer)
-
+    print("updown:", up, down)
     # layer rotation stage
     if rotate is not None or dynamic_rotate is not None:
         rotate_x = (right + left)/2
