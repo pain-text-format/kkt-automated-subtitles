@@ -4,13 +4,20 @@ import textwrap
 from typing import Dict, List, Union
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from kksubs.image.gaussian_blur import apply_gaussian_blur, cfr_apply_gaussian_blur
+from kksubs.image.motion_blur import apply_motion_blur, cfr_apply_motion_blur
+from kksubs.image.radial_blur import apply_radial_blur
+from kksubs.image.brightness import adjust_brightness, cfr_adjust_brightness
+from kksubs.image.utils import apply_image
 
 from kksubs.model.data_access_services import SubtitleDataAccessService
-from kksubs.model.domain_models import LayerData, Subtitle, SubtitleGroup
-from kksubs.model.image_processing_layer import adjust_brightness, apply_gaussian_blur, apply_image, apply_motion_blur, apply_radial_blur, cfr_adjust_brightness, cfr_apply_gaussian_blur, cfr_apply_motion_blur
+from kksubs.model.domain_models import LayerData, Subtitle, SubtitleGroup, SubtitleProfile
 from kksubs.model.validate import validate_subtitle_group
+import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
 
 def _get_text_dimensions(text_string, font, default_text_width=None, default_text_height=None):
     if text_string == "":
@@ -22,7 +29,10 @@ def _get_text_dimensions(text_string, font, default_text_width=None, default_tex
 
     return text_width, text_height
 
-def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
+def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> Image.Image:
+    if get_box is None:
+        get_box = False
+
     # expand subtitle.
     subtitle_profile = subtitle.subtitle_profile
     content = subtitle.content
@@ -31,14 +41,6 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     outline_data_1 = subtitle_profile.outline_data_1
     outline_data_2 = subtitle_profile.outline_data_2
     textbox_data = subtitle_profile.textbox_data
-
-    # default text application.
-    default_text = subtitle_profile.default_text
-    if default_text is not None:
-        if content is None or len(content) == 0:
-            content = [default_text]
-        else:
-            content[0] = default_text + content[0]
 
     # extract image data
     image_width, image_height = image.size
@@ -61,6 +63,7 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
     rotate = textbox_data.rotate
     dynamic_rotate = textbox_data.dynamic_rotate
 
+    # TODO: move this out
     if textbox_data.grid4 is not None:
         grid4_x, grid4_y = textbox_data.grid4
         tb_anchor_x = int(image_width//4*grid4_x)
@@ -120,8 +123,8 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
         up = min(up, tb_anchor_y + sum_text_height)
         down = max(down, tb_anchor_y)
     elif push == "center":
-        up = tb_anchor_y
-        down = tb_anchor_y
+        up = min(up, tb_anchor_y + sum_text_height)
+        down = max(down, tb_anchor_y)
         pass
 
     # add text stage
@@ -165,7 +168,7 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
         else:
             text_draw.text(line_pos, line, font=font, fill=font_color)
         # image.paste(text_layer, (0, 0), text_layer)
-
+    print("updown:", up, down)
     # layer rotation stage
     if rotate is not None or dynamic_rotate is not None:
         rotate_x = (right + left)/2
@@ -212,7 +215,15 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
             image.paste(outline_1_layer, (0, 0), outline_1_layer)
 
     image.paste(text_layer, (0, 0), text_layer)
-    return image
+
+    if not get_box:
+        return image
+    return image, {
+        "left": left,
+        "right": right,
+        "up": up,
+        "down": down,
+    }
 
 def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.Image:
     
@@ -273,12 +284,54 @@ def apply_layer_data_to_image(image:Image.Image, layer_data:LayerData) -> Image.
     
     return image
 
-def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image:
+def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle, is_orbit=None, box_data=None) -> Image.Image:
+    if is_orbit is None:
+        is_orbit = False
+        
     # applies data from the subtitle to the image.
 
     # expand subtitle.
     subtitle_profile = subtitle.subtitle_profile
     content = subtitle.content
+
+    if is_orbit:
+        if box_data is None:
+            return image
+        
+        # update anchor point so it is at center of box.
+        left, right, up, down = box_data["left"], box_data["right"], box_data["up"], box_data["down"]
+        print(left, right, up, down)
+        center_x = (left + right)/2
+        center_y = (up + down)/2
+        anchor_point = subtitle_profile.textbox_data.anchor_point
+        centrix = subtitle_profile.centrix
+
+        if centrix is None:
+            centrix = ["c", "c"]
+            
+        def compute_centrix_x(s:str):
+            s = s.lower()
+            if s == "l":
+                return left
+            if s == "c":
+                return center_x
+            if s == "r":
+                return right
+            raise s
+
+        def compute_centrix_y(s:str):
+            s = s.lower()
+            if s == "u":
+                return up
+            if s == "d":
+                return down
+            if s == "c":
+                return center_y
+            raise s
+        centrix_x = int(np.average(list(map(compute_centrix_x, centrix[0])))) - image.size[0]//2
+        centrix_y = int(np.average(list(map(compute_centrix_y, centrix[1])))) - image.size[1]//2
+        anchor_point = (anchor_point[0]+centrix_x, anchor_point[1]+centrix_y)
+        subtitle_profile.textbox_data.anchor_point = anchor_point
 
     asset_data = subtitle_profile.asset_data
 
@@ -296,8 +349,37 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle) -> Image.Image
         asset_image = Image.open(path)
         apply_image(image, asset_image, displacement=coords, scale=scale, rotate=rotate)
 
-    if content is not None:
-        image = apply_text_to_image(image, subtitle)
+    # default text application.
+    default_text = subtitle_profile.default_text
+    if default_text is not None:
+        if content is None or len(content) == 0:
+            content = [default_text]
+        else:
+            content[0] = default_text + content[0]
+        subtitle.content = content
+    if content is not None and len(content) > 0:
+        image, box_data = apply_text_to_image(image, subtitle, get_box=True)
+
+    # orbits will be applied under the subtitle.
+    # needs the textbox information.
+    # if textbox info is not present do not proceed with orbits.
+    orbits = subtitle.subtitle_profile.orbits
+    if orbits is not None and len(orbits) > 0:
+        # print(orbits)
+        for orbit_profile in orbits:
+            main_anchor_point = subtitle.subtitle_profile.textbox_data.anchor_point
+            orbit_anchor_point = orbit_profile.textbox_data.anchor_point
+            updated_anchor_point = (orbit_anchor_point[0], orbit_anchor_point[1])
+            # updated_anchor_point = (main_anchor_point[0]+orbit_anchor_point[0], main_anchor_point[1]+orbit_anchor_point[1])
+            orbit_profile.textbox_data.anchor_point = updated_anchor_point
+            image = apply_subtitle_to_image(
+                image,
+                Subtitle(
+                    subtitle_profile=orbit_profile
+                ),
+                is_orbit=True,
+                box_data=box_data
+            )
 
     return image
 

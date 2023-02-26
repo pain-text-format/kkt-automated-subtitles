@@ -69,7 +69,10 @@ def _validate_asset_data(asset_data:AssetData):
         if not isinstance(asset_data.rotate, int):
             raise TypeError(type(asset_data.rotate))
 
-def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
+def _validate_subtitle_profile(subtitle_profile:SubtitleProfile, is_orbit=None) -> None:
+    if is_orbit is None:
+        is_orbit = False
+
     if subtitle_profile.font_data is None:
         raise AttributeError
     else:
@@ -99,6 +102,11 @@ def _validate_subtitle_profile(subtitle_profile:SubtitleProfile) -> None:
 
     if subtitle_profile.asset_data is not None:
         _validate_asset_data(subtitle_profile.asset_data)
+
+    if subtitle_profile.orbits is not None and len(subtitle_profile.orbits) > 0:
+        for orbit in subtitle_profile.orbits:
+            _validate_subtitle_profile(orbit, is_orbit=True)
+
     pass
 
 def _validate_subtitle_list(subtitle_list:List[Subtitle]) -> None:

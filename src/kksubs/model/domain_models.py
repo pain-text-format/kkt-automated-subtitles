@@ -29,6 +29,9 @@ def to_rgb_color(color):
         return (color[0], color[1], color[2])
     else:
         return ImageColor.getrgb(color)
+    
+def to_str_coords(value) -> Optional[tuple]:
+    return tuple(map(str, value[1:-1].split(",")))
 
 def to_xy_coords(value) -> Optional[tuple]:
     if value is None or isinstance(value, tuple):
@@ -341,10 +344,18 @@ class AssetData(BaseData):
 
 class SubtitleProfile(BaseData):
 
-    def __init__(self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:Optional[OutlineData]=None,
-                 textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, asset_data:Optional[AssetData]=None,
-                 default_text:Optional[str]=None,
-                 subtitle_profile_id:Optional[str]=None):
+    def __init__(
+            self, font_data:Optional[FontData]=None, outline_data_1:Optional[OutlineData]=None, outline_data_2:Optional[OutlineData]=None,
+            textbox_data:Optional[TextboxData]=None, layer_data:Optional[LayerData]=None, asset_data:Optional[AssetData]=None,
+            default_text:Optional[str]=None,
+
+            # if a subtitle profile contains an orbit.
+            orbits:Optional[List["SubtitleProfile"]]=None,
+            # orbiting data (orbit)
+            centrix:Optional[str]=None, # coordinates. only for subtitles that orbit other subtitles.
+
+            subtitle_profile_id:Optional[str]=None):
+        
         self.font_data = font_data
         self.outline_data_1 = outline_data_1
         self.outline_data_2 = outline_data_2
@@ -353,6 +364,10 @@ class SubtitleProfile(BaseData):
         self.layer_data = layer_data
         self.asset_data = asset_data
         self.default_text = default_text # text prepended to the first line of a subtitle during text application.
+        
+        self.orbits = orbits
+
+        self.centrix = centrix # orbit coordinates of the form UDLRC (up down left right center), reserved for orbits.
         super().__init__()
 
     def correct_values(self):
@@ -368,11 +383,16 @@ class SubtitleProfile(BaseData):
             self.layer_data.correct_values()
         if self.asset_data is not None:
             self.asset_data.correct_values()
+        if self.centrix is not None:
+            self.centrix = to_str_coords(self.centrix)
         pass
 
     @classmethod
     def get_default(cls):
-        subtitle_profile = SubtitleProfile()
+        subtitle_profile = SubtitleProfile(
+            font_data=FontData.get_default(),
+            textbox_data=TextboxData.get_default()
+        )
         subtitle_profile.add_default()
         return subtitle_profile
 
@@ -435,12 +455,13 @@ class SubtitleProfile(BaseData):
         self.asset_data.add_default(profile.asset_data)
 
         self.default_text = coalesce(self.default_text, profile.default_text)
+        self.orbits = coalesce(self.orbits, profile.orbits)
+        self.centrix = coalesce(self.centrix, profile.centrix)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     pass
-
 
 class Subtitle:
 
