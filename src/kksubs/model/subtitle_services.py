@@ -123,8 +123,8 @@ def apply_text_to_image(image:Image.Image, subtitle:Subtitle, get_box=None) -> I
         up = min(up, tb_anchor_y + sum_text_height)
         down = max(down, tb_anchor_y)
     elif push == "center":
-        up = min(up, tb_anchor_y + sum_text_height/2)
-        down = max(down, tb_anchor_y - sum_text_height/2)
+        up = min(up, tb_anchor_y + sum_text_height)
+        down = max(down, tb_anchor_y)
         pass
 
     # add text stage
@@ -328,7 +328,6 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle, is_orbit=None,
             if s == "c":
                 return center_y
             raise s
-        
         centrix_x = int(np.average(list(map(compute_centrix_x, centrix[0])))) - image.size[0]//2
         centrix_y = int(np.average(list(map(compute_centrix_y, centrix[1])))) - image.size[1]//2
         anchor_point = (anchor_point[0]+centrix_x, anchor_point[1]+centrix_y)
@@ -370,7 +369,8 @@ def apply_subtitle_to_image(image:Image.Image, subtitle:Subtitle, is_orbit=None,
         for orbit_profile in orbits:
             main_anchor_point = subtitle.subtitle_profile.textbox_data.anchor_point
             orbit_anchor_point = orbit_profile.textbox_data.anchor_point
-            updated_anchor_point = (main_anchor_point[0]+orbit_anchor_point[0], main_anchor_point[1]+orbit_anchor_point[1])
+            updated_anchor_point = (orbit_anchor_point[0], orbit_anchor_point[1])
+            # updated_anchor_point = (main_anchor_point[0]+orbit_anchor_point[0], main_anchor_point[1]+orbit_anchor_point[1])
             orbit_profile.textbox_data.anchor_point = updated_anchor_point
             image = apply_subtitle_to_image(
                 image,
